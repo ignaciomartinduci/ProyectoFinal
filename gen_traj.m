@@ -1,0 +1,211 @@
+function q_traj = gen_traj(R, cpoints_modes, q0, qdmax, qddmax, dt)
+    
+    % Descripción:
+    % 
+    %   Función definida por usuario. 
+    %
+    %   Genera trayectorias en coordenadas articulares mediante 
+    %   interpolación cartesiana o articular (según se desee). 
+    %
+    %   Perfoma cálculo de cinemática inversa según corresponda utilizando
+    %   el script de cálculo algebráico inv_kinematics.m, también definido
+    %   por el usuario. 
+    %
+    %   (Pendiente) Provee robustez frente a singularidades buscando
+    %   trayectorias alternativas sin saltear puntos de trayectoria 
+    %   cartesiana de entrada. (HECHO:) Lo mismo para puntos que no tienen respuesta
+    %   y así evitar saltos grandes por acumulación de q_previo.
+    %
+    % Argumentos:
+    %
+    %   cpoints -> arreglo nx6 de puntos cartesianos a interpolar | nx7 si
+    %              se especifica tipo de interpolación cartesiana/articular
+    %
+    %   q0      -> coordenada articular inicial
+    %
+
+    %% Inicialización de variables
+
+    q_traj = [];
+    d_4 = R.links(4).d;
+    d_5 = R.links(5).d;
+    a_2 = R.links(3).a;
+    a_3 = R.links(4).a;
+    base = [R.base.n R.base.o , R.base.a , R.base.t;[0 0 0 1]];
+    tool = [R.tool.n R.tool.o , R.tool.a , R.tool.t;[0 0 0 1]];
+
+    %% Desglose de argumentos
+
+    cpoints = cpoints_modes(:,1:6);
+    modes = cpoints_modes(:,7);
+
+    %% Interpolaciones
+
+    N = 50;
+    t_acc = 2;
+    idx_end = -1;
+
+    for i=1:length(cpoints(:,1))
+
+        if i <= idx_end 
+            continue
+        end
+
+        if modes(i) == 0
+
+            idx_end = i;
+
+            for j=i+1:length(cpoints(:,1))
+            
+                if modes(j) == 0 && j < length(cpoints(:,1))
+                    idx_end = idx_end +1;
+                    continue
+                end
+                
+                WP = zeros(idx_end-i+1, 6);
+                break
+    
+            end
+
+            if isempty(q_traj)
+                WP(1,:) = q0;
+            else
+                WP(1,:)=q_traj(end,:);
+            end
+
+            for j=i:idx_end
+    
+                x = cpoints(j,1);
+                y = cpoints(j,2);
+                z = cpoints(j,3);
+                alpha = cpoints(j,4);
+                beta = cpoints(j,5);
+                gamma = cpoints(j,6);
+
+                if ~isempty(q_traj)
+                    [~, q_mejor] = inv_kinematics(x,y,z,alpha,beta,gamma,q_traj(end,:),0,R);
+                else
+                    [~, q_mejor] = inv_kinematics(x,y,z,alpha,beta,gamma,q0,0,R);
+                   
+                end
+
+            WP(j-i+2,:) = q_mejor;
+
+            end
+
+            if i==1
+                q_temp = mstraj(WP, qdmax, [], q0, dt,t_acc');
+            else 
+                
+                q_temp = mstraj(WP(2:end,:), qdmax, [], WP(1,:), dt,t_acc');
+
+            end
+
+            q_traj = [q_traj; q_temp];
+
+        else
+
+            if i == 1
+           
+                x_1 = cpoints(1,1);
+                y_1 = cpoints(1,2);
+                z_1 = cpoints(1,3);
+                alpha_1 = cpoints(1,4);
+                beta_1 = cpoints(1,5);
+                gamma_1 = cpoints(1,6);
+
+                T_q0 = R.fkine(q0);
+                T_0 = [T_q0.n, T_q0.o, T_q0.a, T_q0.t; [0 0 0 1]];
+                T_1 = transl(x_1,y_1,z_1) * rpy2tr(alpha_1,beta_1,gamma_1);
+
+                T_temp = ctraj(T_0, T_1, N);
+
+            else
+
+                           
+                x_0 = cpoints(i-1,1);
+                y_0 = cpoints(i-1,2);
+                z_0 = cpoints(i-1,3);
+                alpha_0 = cpoints(i-1,4);
+                beta_0 = cpoints(i-1,5);
+                gamma_0 = cpoints(i-1,6);
+
+
+                x_1 = cpoints(i,1);
+                y_1 = cpoints(i,2);
+                z_1 = cpoints(i,3);
+                alpha_1 = cpoints(i,4);
+                beta_1 = cpoints(i,5);
+                gamma_1 = cpoints(i,6);
+
+                
+
+                T_0 = transl(x_0,y_0,z_0) * rpy2tr(alpha_0,beta_0,gamma_0);
+                T_1 = transl(x_1,y_1,z_1) * rpy2tr(alpha_1,beta_1,gamma_1);
+
+                T_temp = ctraj(T_0, T_1, N);
+                    
+            end
+
+            for k=1:N
+                
+                x = T_temp(1,4,k);
+                y = T_temp(2,4,k);
+                z = T_temp(3,4,k);
+
+                rpy = tr2rpy(T_temp(:,:,k),'zyx');
+
+                alpha = rpy(1);
+                beta = rpy(2);
+                gamma = rpy(3); 
+
+                
+                if ~isempty(q_traj)
+                    [~, q_mejor] = inv_kinematics(x,y,z,alpha,beta,gamma,q_traj(end,:),0,R);
+                else
+                    [~, q_mejor] = inv_kinematics(x,y,z,alpha,beta,gamma,q0,0,R);
+                end
+
+                q_traj = [q_traj; q_mejor];
+ 
+            end
+
+        end
+
+    end
+
+    q_traj = post_process(q_traj);
+
+end
+
+
+function q_traj2 = post_process(q_traj)
+
+
+    q_thr = 30*pi/180;
+
+    q_p = q_traj(1,:);
+
+    q_traj2 = q_p;
+
+    for i=2:length(q_traj(:,1))
+
+        q_diff = q_traj(i,:) - q_p;
+
+        if max(abs(q_diff)) > q_thr
+        
+            for j=1:50
+
+                q_i = q_p + (q_traj(i,:)-q_p)/(100-j);
+                q_traj2 = [q_traj2; q_i];
+
+            end
+                
+        end
+
+        q_traj2 = [q_traj2;q_traj(i,:)];
+        q_p = q_traj(i,:);
+
+    end
+
+end
