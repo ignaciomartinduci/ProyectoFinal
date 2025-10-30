@@ -1,4 +1,4 @@
-function q_traj = gen_traj(R, cpoints_modes, q0, qdmax, qddmax, dt)
+function q_traj = gen_traj(R, cpoints_modes, q0, qdmax, qddmax, dt, verbose)
     
     % Descripción:
     % 
@@ -83,9 +83,9 @@ function q_traj = gen_traj(R, cpoints_modes, q0, qdmax, qddmax, dt)
                 gamma = cpoints(j,6);
 
                 if ~isempty(q_traj)
-                    [~, q_mejor] = inv_kinematics(x,y,z,alpha,beta,gamma,q_traj(end,:),0,R);
+                    [~, q_mejor] = inv_kinematics(x,y,z,alpha,beta,gamma,q_traj(end,:),verbose,R);
                 else
-                    [~, q_mejor] = inv_kinematics(x,y,z,alpha,beta,gamma,q0,0,R);
+                    [~, q_mejor] = inv_kinematics(x,y,z,alpha,beta,gamma,q0,verbose,R);
                    
                 end
 
@@ -161,9 +161,9 @@ function q_traj = gen_traj(R, cpoints_modes, q0, qdmax, qddmax, dt)
 
                 
                 if ~isempty(q_traj)
-                    [~, q_mejor] = inv_kinematics(x,y,z,alpha,beta,gamma,q_traj(end,:),0,R);
+                    [~, q_mejor] = inv_kinematics(x,y,z,alpha,beta,gamma,q_traj(end,:),verbose,R);
                 else
-                    [~, q_mejor] = inv_kinematics(x,y,z,alpha,beta,gamma,q0,0,R);
+                    [~, q_mejor] = inv_kinematics(x,y,z,alpha,beta,gamma,q0,verbose,R);
                 end
 
                 q_traj = [q_traj; q_mejor];

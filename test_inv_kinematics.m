@@ -3,6 +3,7 @@ function [] = test_inv_kinematics(R ,TEST_LOOP_IK)
     disp("---> TEST INV_KINEMATICS")
     
     d = pi/180; 
+    e = 0.01;
     q_tik = [-4.7878   -0.0206    5.7773   -2.0058    1.0715   -6.2832];
     %R.plot(q_tik)
 
@@ -26,14 +27,13 @@ function [] = test_inv_kinematics(R ,TEST_LOOP_IK)
     gamma_tik = rpy_tik(3);
 
     % override
-
-    % x_tik = 1.2;
-    % y_tik = 0.2;
-    % z_tik = 0.15;
-    % % 
-    % alpha_tik = 15*d+e;
-    % beta_tik = 45*d+e;
-    % gamma_tik = 15*d+e;
+    x_tik = 0;
+    y_tik = 0.3;
+    z_tik = 0.25;
+    % 
+    alpha_tik = 0*d+e;
+    beta_tik = 180*d+e;
+    gamma_tik = 0*d+e;
 
     coordenadas_cartesianas = "x = "+string(x_tik)+" | y = "+string(y_tik)+" | z = "+string(z_tik)+" | alpha = "+string(alpha_tik)+" | beta = "+string(beta_tik)+" | gamma = "+string(gamma_tik);
 

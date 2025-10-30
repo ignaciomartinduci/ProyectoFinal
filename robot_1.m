@@ -14,6 +14,7 @@
     a_5 = 0;
     a_6 = 0;
     
+    % DH 1
     dh = [
         0       d_1     a_1       -pi/2;
         0       d_2     a_2     0;
@@ -21,8 +22,10 @@
         0       d_4     a_4       pi/2;
         0       d_5     a_5       -pi/2;
         0       d_6     a_6       0
-    
+
     ];
+
+
     
     q_offset = [0, -pi/2, 0, pi/2, 0, 0];
     qdmax = [pi pi pi 2*pi 2*pi 2*pi]; % Velocidades máximas de cada articulación
