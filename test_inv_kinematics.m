@@ -27,13 +27,13 @@ function [] = test_inv_kinematics(R ,TEST_LOOP_IK)
     gamma_tik = rpy_tik(3);
 
     % override
-    x_tik = 0;
-    y_tik = 0.3;
-    z_tik = 0.25;
+    % x_tik = 0;
+    % y_tik = 0.3;
+    % z_tik = 0.25;
     % 
-    alpha_tik = 0*d+e;
-    beta_tik = 180*d+e;
-    gamma_tik = 0*d+e;
+    % alpha_tik = 0*d+e;
+    % beta_tik = 180*d+e;
+    % gamma_tik = 0*d+e;
 
     coordenadas_cartesianas = "x = "+string(x_tik)+" | y = "+string(y_tik)+" | z = "+string(z_tik)+" | alpha = "+string(alpha_tik)+" | beta = "+string(beta_tik)+" | gamma = "+string(gamma_tik);
 
@@ -127,7 +127,7 @@ function [] = test_inv_kinematics(R ,TEST_LOOP_IK)
             disp("LOOP -> Las coordenadas cartesianas consigna son: ")
             disp(coordenadas_cartesianas)
 
-            [sol_loop, ~] = inv_kinematics(x_loop,y_loop,z_loop,alpha_loop,beta_loop,gamma_loop, q_previo, 1, R);
+            [sol_loop, ~] = inv_kinematics(x_loop,y_loop,z_loop,alpha_loop,beta_loop,gamma_loop, q_previo, 1, R)
             
             if ~isempty(sol_loop)
                 for i=1:length(sol_loop(:,1))

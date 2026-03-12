@@ -14,11 +14,15 @@ function [] = singularities(R, PLOT_SINGULARITIES)
     q_wrist_4 = [rand_num_1 rand_num_2 rand_num_3 rand_num_4 2*pi rand_num_6];
     q_wrist_5 = [rand_num_1 rand_num_2 rand_num_3 rand_num_4 -2*pi rand_num_6];
 
-    q_elbow = [rand_num_1 rand_num_2 0 rand_num_4 rand_num_5 rand_num_6];
+    q_elbow_1 = [rand_num_1 rand_num_2 0 rand_num_4 rand_num_5 rand_num_6];
+    q_elbow_2 = [rand_num_1 rand_num_2 pi rand_num_4 rand_num_5 rand_num_6];
+    q_elbow_3 = [rand_num_1 rand_num_2 -pi rand_num_4 rand_num_5 rand_num_6];
+    q_elbow_4 = [rand_num_1 rand_num_2 2*pi rand_num_4 rand_num_5 rand_num_6];
+    q_elbow_5 = [rand_num_1 rand_num_2 -2*pi rand_num_4 rand_num_5 rand_num_6];
 
     % Falta q_shoulder
     
-    all_singularities = [q_wrist_1; q_wrist_2; q_wrist_3; q_wrist_4; q_wrist_5; q_elbow];
+    all_singularities = [q_wrist_1; q_wrist_2; q_wrist_3; q_wrist_4; q_wrist_5; q_elbow_1; q_elbow_2; q_elbow_3; q_elbow_4; q_elbow_5];
 
     for i=1:length(all_singularities(:,1))
     
