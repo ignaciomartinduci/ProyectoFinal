@@ -10,6 +10,8 @@ flags;
 robot_1;
 
 %% ======================
+
+disp("== INICIANDO PROGRAMA ==");
     
 if TEST_WORKSPACE
 

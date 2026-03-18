@@ -1,4 +1,8 @@
-function [ampl_all_sol, q_mejor] = inv_kinematics(x_t,y_t,z_t,alpha,beta,gamma, q_previo, verbose, R)
+function [ampl_all_sol, q_mejor] = inv_kinematics(x_t,y_t,z_t,alpha,beta,gamma, q_previo, verbose, R, pose_config)
+
+    if nargin < 10 % Valor por defecto de configuración
+        pose_config = 'NONE';
+    end
 
     % Singularidades 
         % Muñeca: Ocurre cuando θ4 y θ5 son paralelos -> θ5 = 0 +-180 +-360
@@ -729,8 +733,6 @@ function [ampl_all_sol, q_mejor] = inv_kinematics(x_t,y_t,z_t,alpha,beta,gamma, 
 
     for i=1:idx_max
 
-        divider = 2^5;
-
         q_aux = [0 0 0 0 0 0];
 
         for j=1:6
@@ -767,7 +769,7 @@ function [ampl_all_sol, q_mejor] = inv_kinematics(x_t,y_t,z_t,alpha,beta,gamma, 
     
     if ~isempty(ampl_all_sol)
 
-        q_mejor = costo_simple(q_previo, ampl_all_sol);
+        q_mejor = costo_simple(q_previo, ampl_all_sol, pose_config);
 
     else
 
@@ -802,19 +804,39 @@ function [ampl_all_sol, q_mejor] = inv_kinematics(x_t,y_t,z_t,alpha,beta,gamma, 
 end
 
 
-function q_mejor = costo_simple(q_previo, ampl_all_sol)
+function q_mejor = costo_simple(q_previo, ampl_all_sol, pose_config)
 
     q_mejor = q_previo;
     costo_mejor = inf;
 
     for i=1:length(ampl_all_sol(:,1))
 
+        if pose_config == "BASIC"
+
+            stop = 0;
+
+            for j=1:6
+
+                if ampl_all_sol(i,j) > pi || ampl_all_sol(i,j) < -pi
+
+                    stop = 1
+                end
+            end
+
+            if stop == 1
+
+                continue
+
+            end           
+
+        end
+
         vec_costos = abs(ampl_all_sol(i,:)-q_previo);
         costo_nuevo = sum(vec_costos);
 
         if costo_nuevo < costo_mejor
 
-            q_mejor = ampl_all_sol(i,:);
+            q_mejor = ampl_all_sol(i,:)
             costo_mejor = costo_nuevo;
 
         end
