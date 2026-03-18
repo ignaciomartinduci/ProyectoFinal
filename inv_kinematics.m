@@ -1,4 +1,4 @@
-function [all_sol, q_mejor] = inv_kinematics(x_t,y_t,z_t,alpha,beta,gamma, q_previo, verbose, R)
+function [ampl_all_sol, q_mejor] = inv_kinematics(x_t,y_t,z_t,alpha,beta,gamma, q_previo, verbose, R)
 
     % Singularidades 
         % Muñeca: Ocurre cuando θ4 y θ5 son paralelos -> θ5 = 0 +-180 +-360
@@ -52,10 +52,8 @@ function [all_sol, q_mejor] = inv_kinematics(x_t,y_t,z_t,alpha,beta,gamma, q_pre
 
     all_sol = [];
 
-    q_111 = 0;
-    q_112 = 0;
-    q_121 = 0;
-    q_122 = 0;
+    q_11 = 0;
+    q_12 = 0;
     q_611 = 0;
     q_612 = 0;
     q_621 = 0;
@@ -128,44 +126,32 @@ function [all_sol, q_mejor] = inv_kinematics(x_t,y_t,z_t,alpha,beta,gamma, q_pre
     t_11 = (-2*B+sqrt(4*B^2-4*(C-A)*(C+A)))/(2*(C-A));
     t_12 = (-2*B-sqrt(4*B^2-4*(C-A)*(C+A)))/(2*(C-A));
 
-    q_111 = 2*atan(t_11);
-    q_121 = 2*atan(t_12);
+    q_11 = 2*atan(t_11);
+    q_12 = 2*atan(t_12);
 
-    if ~isreal(q_111)
+    if ~isreal(q_11)
         s1_valid = 0;
         s2_valid = 0;
         s3_valid = 0;
         s4_valid = 0;
     else
-        q_111 = mod(q_111-qlim_1_inf, qlim_1_sup-qlim_1_inf) + qlim_1_inf
+        q_11 = mod(q_11-qlim_1_inf, qlim_1_sup-qlim_1_inf) + qlim_1_inf;
     end
 
-    if ~isreal(q_121)
+    if ~isreal(q_12)
         s5_valid = 0;
         s6_valid = 0;
         s7_valid = 0;
         s8_valid = 0;
     else
-         q_121 = mod(q_121-qlim_1_inf, qlim_1_sup-qlim_1_inf) + qlim_1_inf
-    end
-
-    if q_111 > 0
-        q_112 = q_111 - 2*pi;
-    else
-        q_112 = q_111 + 2*pi;
-    end
-
-    if q_121 > 0
-        q_122 = q_121 - 2*pi;
-    else
-        q_122 = q_121 + 2*pi;
+         q_12 = mod(q_12-qlim_1_inf, qlim_1_sup-qlim_1_inf) + qlim_1_inf;
     end
 
     
     %% 2 Determinar q6 
 
-    A = -(r_22*cos(q_111)-r_12*sin(q_111));
-    B = r_21*cos(q_111)-r_11*sin(q_111);
+    A = -(r_22*cos(q_11)-r_12*sin(q_11));
+    B = r_21*cos(q_11)-r_11*sin(q_11);
 
     if isreal(A) && isreal(B)
         q_611 = atan2(A,B);
@@ -179,8 +165,8 @@ function [all_sol, q_mejor] = inv_kinematics(x_t,y_t,z_t,alpha,beta,gamma, q_pre
         s4_valid = 0;
     end
 
-    A = -(r_22*cos(q_121)-r_12*sin(q_121));
-    B = r_21*cos(q_121)-r_11*sin(q_121);
+    A = -(r_22*cos(q_12)-r_12*sin(q_12));
+    B = r_21*cos(q_12)-r_11*sin(q_12);
 
     if isreal(A) && isreal(B)
         q_621 = atan2(A,B);
@@ -192,38 +178,6 @@ function [all_sol, q_mejor] = inv_kinematics(x_t,y_t,z_t,alpha,beta,gamma, q_pre
         s6_valid = 0;
         s7_valid = 0;
         s8_valid = 0;
-    end
-
-
-    A = -(r_22*cos(q_112)-r_12*sin(q_112));
-    B = r_21*cos(q_112)-r_11*sin(q_112);
-
-    if isreal(A) && isreal(B)
-        q_631 = atan2(A,B);
-        q_631 = mod(q_631-qlim_6_inf, qlim_6_sup-qlim_6_inf) + qlim_6_inf;
-        q_632 = mod(q_631-qlim_6_inf+pi, qlim_6_sup-qlim_6_inf) + qlim_6_inf;
-
-    else
-        s9_valid = 0;
-        s10_valid = 0;
-        s11_valid = 0;
-        s12_valid = 0;
-    end
-
-
-    A = -(r_22*cos(q_122)-r_12*sin(q_122));
-    B = r_21*cos(q_122)-r_11*sin(q_122);
-
-    if isreal(A) && isreal(B)
-        q_641 = atan2(A,B);
-        q_641 = mod(q_641-qlim_6_inf, qlim_6_sup-qlim_6_inf) + qlim_6_inf;
-        q_642 = mod(q_641-qlim_6_inf+pi, qlim_6_sup-qlim_6_inf) + qlim_6_inf;
-
-    else
-        s13_valid = 0;
-        s14_valid = 0;
-        s15_valid = 0;
-        s16_valid = 0;
     end
 
     if ~isreal(q_611)
@@ -242,28 +196,11 @@ function [all_sol, q_mejor] = inv_kinematics(x_t,y_t,z_t,alpha,beta,gamma, q_pre
         s7_valid = 0;
         s8_valid = 0;
     end
-    
-    if ~isreal(q_631)
-        s9_valid = 0;
-        s10_valid = 0;
-    end
-    if ~isreal(q_632)
-        s11_valid = 0;
-        s12_valid = 0;
-    end
-    if ~isreal(q_641)
-        s13_valid = 0;
-        s14_valid = 0;
-    end
-    if ~isreal(q_642)
-        s15_valid = 0;
-        s16_valid = 0;
-    end
 
     %% 3 Determinar q5
 
-    num = cos(q_611)*(r_21*cos(q_111)-r_11*sin(q_111))-sin(q_611)*(r_22*cos(q_111)-r_12*sin(q_111));
-    den = r_23*cos(q_111)-r_13*sin(q_111);
+    num = cos(q_611)*(r_21*cos(q_11)-r_11*sin(q_11))-sin(q_611)*(r_22*cos(q_11)-r_12*sin(q_11));
+    den = r_23*cos(q_11)-r_13*sin(q_11);
 
     if isreal(num) && isreal(den) && s1_valid && s2_valid
         q_511 = atan2(num,den);
@@ -273,8 +210,8 @@ function [all_sol, q_mejor] = inv_kinematics(x_t,y_t,z_t,alpha,beta,gamma, q_pre
         s2_valid = 0;
     end
 
-    num = cos(q_612)*(r_21*cos(q_111)-r_11*sin(q_111))-sin(q_612)*(r_22*cos(q_111)-r_12*sin(q_111));
-    den = r_23*cos(q_111)-r_13*sin(q_111);
+    num = cos(q_612)*(r_21*cos(q_11)-r_11*sin(q_11))-sin(q_612)*(r_22*cos(q_11)-r_12*sin(q_11));
+    den = r_23*cos(q_11)-r_13*sin(q_11);
 
     if isreal(num) && isreal(den) && s3_valid && s4_valid
         q_512 = atan2(num,den);
@@ -284,8 +221,8 @@ function [all_sol, q_mejor] = inv_kinematics(x_t,y_t,z_t,alpha,beta,gamma, q_pre
         s4_valid = 0;
     end
 
-    num = cos(q_621)*(r_21*cos(q_121)-r_11*sin(q_121))-sin(q_621)*(r_22*cos(q_121)-r_12*sin(q_121));
-    den = r_23*cos(q_121)-r_13*sin(q_121);
+    num = cos(q_621)*(r_21*cos(q_12)-r_11*sin(q_12))-sin(q_621)*(r_22*cos(q_12)-r_12*sin(q_12));
+    den = r_23*cos(q_12)-r_13*sin(q_12);
 
     if isreal(num) && isreal(den) && s5_valid && s6_valid
         q_521 = atan2(num,den);
@@ -295,8 +232,8 @@ function [all_sol, q_mejor] = inv_kinematics(x_t,y_t,z_t,alpha,beta,gamma, q_pre
         s6_valid = 0;
     end
 
-    num = cos(q_622)*(r_21*cos(q_121)-r_11*sin(q_121))-sin(q_622)*(r_22*cos(q_121)-r_12*sin(q_121));
-    den = r_23*cos(q_121)-r_13*sin(q_121);
+    num = cos(q_622)*(r_21*cos(q_12)-r_11*sin(q_12))-sin(q_622)*(r_22*cos(q_12)-r_12*sin(q_12));
+    den = r_23*cos(q_12)-r_13*sin(q_12);
 
     if isreal(num) && isreal(den) && s7_valid && s8_valid
         q_522 = atan2(num,den);
@@ -304,50 +241,6 @@ function [all_sol, q_mejor] = inv_kinematics(x_t,y_t,z_t,alpha,beta,gamma, q_pre
     else
         s7_valid = 0;
         s8_valid = 0;
-    end
-
-    num = cos(q_631)*(r_21*cos(q_112)-r_11*sin(q_112))-sin(q_631)*(r_22*cos(q_112)-r_12*sin(q_112));
-    den = r_23*cos(q_112)-r_13*sin(q_112);
-
-    if isreal(num) && isreal(den) && s9_valid && s10_valid
-        q_531 = atan2(num,den);
-        q_531 = mod(q_531-qlim_5_inf, qlim_5_sup-qlim_5_inf) + qlim_5_inf;
-    else
-        s9_valid = 0;
-        s10_valid = 0;
-    end
-
-    num = cos(q_632)*(r_21*cos(q_112)-r_11*sin(q_112))-sin(q_112)*(r_22*cos(q_112)-r_12*sin(q_112));
-    den = r_23*cos(q_112)-r_13*sin(q_112);
-
-    if isreal(num) && isreal(den) && s11_valid && s12_valid
-        q_532 = atan2(num,den);
-        q_532 = mod(q_532-qlim_5_inf, qlim_5_sup-qlim_5_inf) + qlim_5_inf;
-    else
-        s11_valid = 0;
-        s12_valid = 0;
-    end
-
-    num = cos(q_641)*(r_21*cos(q_122)-r_11*sin(q_122))-sin(q_641)*(r_22*cos(q_122)-r_12*sin(q_122));
-    den = r_23*cos(q_122)-r_13*sin(q_122);
-
-    if isreal(num) && isreal(den) && s13_valid && s14_valid
-        q_541 = atan2(num,den);
-        q_541 = mod(q_531-qlim_5_inf, qlim_5_sup-qlim_5_inf) + qlim_5_inf;
-    else
-        s13_valid = 0;
-        s14_valid = 0;
-    end
-
-    num = cos(q_642)*(r_21*cos(q_122)-r_11*sin(q_122))-sin(q_642)*(r_22*cos(q_122)-r_12*sin(q_122));
-    den = r_23*cos(q_122)-r_13*sin(q_122);
-
-    if isreal(num) && isreal(den) && s15_valid && s16_valid
-        q_542 = atan2(num,den);
-        q_542 = mod(q_542-qlim_5_inf, qlim_5_sup-qlim_5_inf) + qlim_5_inf;
-    else
-        s15_valid = 0;
-        s16_valid = 0;
     end
 
     if ~isreal(q_511)
@@ -367,30 +260,13 @@ function [all_sol, q_mejor] = inv_kinematics(x_t,y_t,z_t,alpha,beta,gamma, q_pre
         s8_valid = 0;
     end
 
-    if ~isreal(q_531)
-        s9_valid = 0;
-        s10_valid = 0;
-    end
-    if ~isreal(q_532)
-        s11_valid = 0;
-        s12_valid = 0;
-    end
-    if ~isreal(q_541)
-        s13_valid = 0;
-        s14_valid = 0;
-    end
-    if ~isreal(q_542)
-        s15_valid = 0;
-        s16_valid = 0;
-    end
-
 
     %% 4 Determinar q2
 
     % sol 1 - 2
 
     if s1_valid && s2_valid
-        A = (r_13*cos(q_111)+r_23*sin(q_111))/(-sin(q_511));
+        A = (r_13*cos(q_11)+r_23*sin(q_11))/(-sin(q_511));
         try
             B = -r_33/-sin(q_511);
         catch
@@ -399,7 +275,7 @@ function [all_sol, q_mejor] = inv_kinematics(x_t,y_t,z_t,alpha,beta,gamma, q_pre
         end
     
         a = -d_5*A+z;
-        b = d_5*B-x*cos(q_111)-y*sin(q_111);  
+        b = d_5*B-x*cos(q_11)-y*sin(q_11);  
     
         C = a_2^2+a^2+b^2-a_3^2;
         D = 2*a_2*b;
@@ -416,7 +292,7 @@ function [all_sol, q_mejor] = inv_kinematics(x_t,y_t,z_t,alpha,beta,gamma, q_pre
 
     if s3_valid && s4_valid
     
-        A = (r_13*cos(q_111)+r_23*sin(q_111))/(-sin(q_512));
+        A = (r_13*cos(q_11)+r_23*sin(q_11))/(-sin(q_512));
         try
             B = -r_33/-sin(q_512);
         catch
@@ -425,7 +301,7 @@ function [all_sol, q_mejor] = inv_kinematics(x_t,y_t,z_t,alpha,beta,gamma, q_pre
         end
     
         a = -d_5*A+z;
-        b = d_5*B-x*cos(q_111)-y*sin(q_111);
+        b = d_5*B-x*cos(q_11)-y*sin(q_11);
     
         C = a_2^2+a^2+b^2-a_3^2;
         D = 2*a_2*b;
@@ -442,7 +318,7 @@ function [all_sol, q_mejor] = inv_kinematics(x_t,y_t,z_t,alpha,beta,gamma, q_pre
 
     if s5_valid && s6_valid
 
-        A = (r_13*cos(q_121)+r_23*sin(q_121))/(-sin(q_521));
+        A = (r_13*cos(q_12)+r_23*sin(q_12))/(-sin(q_521));
         try
             B = -r_33/-sin(q_521);
         catch
@@ -451,7 +327,7 @@ function [all_sol, q_mejor] = inv_kinematics(x_t,y_t,z_t,alpha,beta,gamma, q_pre
         end
     
         a = -d_5*A+z;
-        b = d_5*B-x*cos(q_121)-y*sin(q_121);
+        b = d_5*B-x*cos(q_12)-y*sin(q_12);
     
         C = a_2^2+a^2+b^2-a_3^2;
         D = 2*a_2*b;
@@ -468,7 +344,7 @@ function [all_sol, q_mejor] = inv_kinematics(x_t,y_t,z_t,alpha,beta,gamma, q_pre
     
     if s7_valid && s8_valid
 
-        A = (r_13*cos(q_121)+r_23*sin(q_121))/(-sin(q_522));
+        A = (r_13*cos(q_12)+r_23*sin(q_12))/(-sin(q_522));
         try
             B = -r_33/-sin(q_522);
         catch
@@ -477,7 +353,7 @@ function [all_sol, q_mejor] = inv_kinematics(x_t,y_t,z_t,alpha,beta,gamma, q_pre
         end
     
         a = -d_5*A+z;
-        b = d_5*B-x*cos(q_121)-y*sin(q_121);  
+        b = d_5*B-x*cos(q_12)-y*sin(q_12);  
     
         C = a_2^2+a^2+b^2-a_3^2;
         D = 2*a_2*b;
@@ -488,114 +364,6 @@ function [all_sol, q_mejor] = inv_kinematics(x_t,y_t,z_t,alpha,beta,gamma, q_pre
     
         q_27 = 2*atan(t_27);
         q_28 = 2*atan(t_28);
-            
-    end
-
-    % sol 9 - 10
-
-    if s9_valid && s10_valid
-
-        A = (r_13*cos(q_112)+r_23*sin(q_112))/(-sin(q_531));
-        try
-            B = -r_33/-sin(q_531);
-        catch
-            s9_valid = 0;
-            s10_valid = 0;
-        end
-    
-        a = -d_5*A+z;
-        b = d_5*B-x*cos(q_112)-y*sin(q_112);  
-    
-        C = a_2^2+a^2+b^2-a_3^2;
-        D = 2*a_2*b;
-        E = -2*a_2*a;
-    
-        t_29 = (-2*D+sqrt(4*D^2-4*(C-E)*(C+E)))/(2*(C-E));
-        t_210 = (-2*D-sqrt(4*D^2-4*(C-E)*(C+E)))/(2*(C-E));
-    
-        q_29 = 2*atan(t_29);
-        q_210 = 2*atan(t_210);
-            
-    end
-
-    % sol 11 - 12
-
-    if s11_valid && s12_valid
-
-        A = (r_13*cos(q_112)+r_23*sin(q_112))/(-sin(q_532));
-        try
-            B = -r_33/-sin(q_532);
-        catch
-            s11_valid = 0;
-            s12_valid = 0;
-        end
-    
-        a = -d_5*A+z;
-        b = d_5*B-x*cos(q_112)-y*sin(q_112);  
-    
-        C = a_2^2+a^2+b^2-a_3^2;
-        D = 2*a_2*b;
-        E = -2*a_2*a;
-    
-        t_211 = (-2*D+sqrt(4*D^2-4*(C-E)*(C+E)))/(2*(C-E));
-        t_212 = (-2*D-sqrt(4*D^2-4*(C-E)*(C+E)))/(2*(C-E));
-    
-        q_211 = 2*atan(t_211);
-        q_212 = 2*atan(t_212);
-            
-    end
-
-    % sol 13 - 14
-
-    if s13_valid && s14_valid
-
-        A = (r_13*cos(q_122)+r_23*sin(q_122))/(-sin(q_541));
-        try
-            B = -r_33/-sin(q_541);
-        catch
-            s13_valid = 0;
-            s14_valid = 0;
-        end
-    
-        a = -d_5*A+z;
-        b = d_5*B-x*cos(q_122)-y*sin(q_122);  
-    
-        C = a_2^2+a^2+b^2-a_3^2;
-        D = 2*a_2*b;
-        E = -2*a_2*a;
-    
-        t_213 = (-2*D+sqrt(4*D^2-4*(C-E)*(C+E)))/(2*(C-E));
-        t_214 = (-2*D-sqrt(4*D^2-4*(C-E)*(C+E)))/(2*(C-E));
-    
-        q_213 = 2*atan(t_213);
-        q_214 = 2*atan(t_214);
-            
-    end
-
-    % sol 15 - 16
-
-    if s15_valid && s16_valid
-
-        A = (r_13*cos(q_122)+r_23*sin(q_122))/(-sin(q_542));
-        try
-            B = -r_33/-sin(q_542);
-        catch
-            s15_valid = 0;
-            s16_valid = 0;
-        end
-    
-        a = -d_5*A+z;
-        b = d_5*B-x*cos(q_122)-y*sin(q_122);  
-    
-        C = a_2^2+a^2+b^2-a_3^2;
-        D = 2*a_2*b;
-        E = -2*a_2*a;
-    
-        t_215 = (-2*D+sqrt(4*D^2-4*(C-E)*(C+E)))/(2*(C-E));
-        t_216 = (-2*D-sqrt(4*D^2-4*(C-E)*(C+E)))/(2*(C-E));
-    
-        q_215 = 2*atan(t_215);
-        q_216 = 2*atan(t_216);
             
     end
 
@@ -639,46 +407,6 @@ function [all_sol, q_mejor] = inv_kinematics(x_t,y_t,z_t,alpha,beta,gamma, q_pre
     else
         q_28 = mod(q_28-qlim_2_inf, qlim_2_sup-qlim_2_inf) + qlim_2_inf;    
     end
-    if ~isreal(q_29)
-        s9_valid = 0;
-    else
-        q_29 = mod(q_29-qlim_2_inf, qlim_2_sup-qlim_2_inf) + qlim_2_inf;    
-    end
-    if ~isreal(q_210)
-        s10_valid = 0;
-    else
-        q_210 = mod(q_210-qlim_2_inf, qlim_2_sup-qlim_2_inf) + qlim_2_inf;    
-    end
-    if ~isreal(q_211)
-        s11_valid = 0;
-    else
-        q_211 = mod(q_211-qlim_2_inf, qlim_2_sup-qlim_2_inf) + qlim_2_inf;    
-    end
-    if ~isreal(q_212)
-        s12_valid = 0;
-    else
-        q_212 = mod(q_212-qlim_2_inf, qlim_2_sup-qlim_2_inf) + qlim_2_inf;    
-    end
-    if ~isreal(q_213)
-        s13_valid = 0;
-    else
-        q_213 = mod(q_213-qlim_2_inf, qlim_2_sup-qlim_2_inf) + qlim_2_inf;    
-    end
-    if ~isreal(q_214)
-        s14_valid = 0;
-    else
-        q_214 = mod(q_214-qlim_2_inf, qlim_2_sup-qlim_2_inf) + qlim_2_inf;    
-    end
-    if ~isreal(q_215)
-        s15_valid = 0;
-    else
-        q_215 = mod(q_215-qlim_2_inf, qlim_2_sup-qlim_2_inf) + qlim_2_inf;    
-    end
-    if ~isreal(q_216)
-        s16_valid = 0;
-    else
-        q_216 = mod(q_216-qlim_2_inf, qlim_2_sup-qlim_2_inf) + qlim_2_inf;    
-    end
 
 
     
@@ -688,11 +416,11 @@ function [all_sol, q_mejor] = inv_kinematics(x_t,y_t,z_t,alpha,beta,gamma, q_pre
 
     if s1_valid
 
-        A = (r_13*cos(q_111)+r_23*sin(q_111))/(-sin(q_511));
+        A = (r_13*cos(q_11)+r_23*sin(q_11))/(-sin(q_511));
         B = -r_33/-sin(q_511);
     
         a = -d_5*A+z;
-        b = d_5*B-x*cos(q_111)-y*sin(q_111);  
+        b = d_5*B-x*cos(q_11)-y*sin(q_11);  
     
         num = -a_2*sin(q_21)-b;
         den = -a_2*cos(q_21)+a;
@@ -705,11 +433,11 @@ function [all_sol, q_mejor] = inv_kinematics(x_t,y_t,z_t,alpha,beta,gamma, q_pre
 
     if s2_valid
 
-        A = (r_13*cos(q_111)+r_23*sin(q_111))/(-sin(q_511));
+        A = (r_13*cos(q_11)+r_23*sin(q_11))/(-sin(q_511));
         B = -r_33/-sin(q_511);
     
         a = -d_5*A+z;
-        b = d_5*B-x*cos(q_111)-y*sin(q_111);  
+        b = d_5*B-x*cos(q_11)-y*sin(q_11);  
     
         num = -a_2*sin(q_22)-b;
         den = -a_2*cos(q_22)+a;
@@ -724,11 +452,11 @@ function [all_sol, q_mejor] = inv_kinematics(x_t,y_t,z_t,alpha,beta,gamma, q_pre
 
     if s3_valid
 
-        A = (r_13*cos(q_111)+r_23*sin(q_111))/(-sin(q_512));
+        A = (r_13*cos(q_11)+r_23*sin(q_11))/(-sin(q_512));
         B = -r_33/-sin(q_512);
     
         a = -d_5*A+z;
-        b = d_5*B-x*cos(q_111)-y*sin(q_111);
+        b = d_5*B-x*cos(q_11)-y*sin(q_11);
     
         num = -a_2*sin(q_23)-b;
         den = -a_2*cos(q_23)+a;
@@ -741,11 +469,11 @@ function [all_sol, q_mejor] = inv_kinematics(x_t,y_t,z_t,alpha,beta,gamma, q_pre
 
     if s4_valid
 
-        A = (r_13*cos(q_111)+r_23*sin(q_111))/(-sin(q_512));
+        A = (r_13*cos(q_11)+r_23*sin(q_11))/(-sin(q_512));
         B = -r_33/-sin(q_512);
     
         a = -d_5*A+z;
-        b = d_5*B-x*cos(q_111)-y*sin(q_111);
+        b = d_5*B-x*cos(q_11)-y*sin(q_11);
     
         num = -a_2*sin(q_24)-b;
         den = -a_2*cos(q_24)+a;
@@ -760,11 +488,11 @@ function [all_sol, q_mejor] = inv_kinematics(x_t,y_t,z_t,alpha,beta,gamma, q_pre
 
     if s5_valid
 
-        A = (r_13*cos(q_121)+r_23*sin(q_121))/(-sin(q_521));
+        A = (r_13*cos(q_12)+r_23*sin(q_12))/(-sin(q_521));
         B = -r_33/-sin(q_521);
     
         a = -d_5*A+z;
-        b = d_5*B-x*cos(q_121)-y*sin(q_121);
+        b = d_5*B-x*cos(q_12)-y*sin(q_12);
     
         num = -a_2*sin(q_25)-b;
         den = -a_2*cos(q_25)+a;
@@ -777,11 +505,11 @@ function [all_sol, q_mejor] = inv_kinematics(x_t,y_t,z_t,alpha,beta,gamma, q_pre
 
     if s6_valid
 
-        A = (r_13*cos(q_121)+r_23*sin(q_121))/(-sin(q_521));
+        A = (r_13*cos(q_12)+r_23*sin(q_12))/(-sin(q_521));
         B = -r_33/-sin(q_521);
     
         a = -d_5*A+z;
-        b = d_5*B-x*cos(q_121)-y*sin(q_121);
+        b = d_5*B-x*cos(q_12)-y*sin(q_12);
     
         num = -a_2*sin(q_26)-b;
         den = -a_2*cos(q_26)+a;
@@ -796,11 +524,11 @@ function [all_sol, q_mejor] = inv_kinematics(x_t,y_t,z_t,alpha,beta,gamma, q_pre
 
     if s7_valid
     
-        A = (r_13*cos(q_121)+r_23*sin(q_121))/(-sin(q_522));
+        A = (r_13*cos(q_12)+r_23*sin(q_12))/(-sin(q_522));
         B = -r_33/-sin(q_522);
     
         a = -d_5*A+z;
-        b = d_5*B-x*cos(q_121)-y*sin(q_121);  
+        b = d_5*B-x*cos(q_12)-y*sin(q_12);  
     
         num = -a_2*sin(q_27)-b;
         den = -a_2*cos(q_27)+a;
@@ -813,11 +541,11 @@ function [all_sol, q_mejor] = inv_kinematics(x_t,y_t,z_t,alpha,beta,gamma, q_pre
 
     if s8_valid
     
-        A = (r_13*cos(q_121)+r_23*sin(q_121))/(-sin(q_522));
+        A = (r_13*cos(q_12)+r_23*sin(q_12))/(-sin(q_522));
         B = -r_33/-sin(q_522);
     
         a = -d_5*A+z;
-        b = d_5*B-x*cos(q_121)-y*sin(q_121);
+        b = d_5*B-x*cos(q_12)-y*sin(q_12);
     
         num = -a_2*sin(q_28)-b;
         den = -a_2*cos(q_28)+a;
@@ -843,7 +571,7 @@ function [all_sol, q_mejor] = inv_kinematics(x_t,y_t,z_t,alpha,beta,gamma, q_pre
     % Sol 1
 
         num = r_33;
-    den = -(r_13*cos(q_111)+r_23*sin(q_111));
+    den = -(r_13*cos(q_11)+r_23*sin(q_11));
 
     if s1_valid
         q234 = atan2(num,den);
@@ -853,7 +581,7 @@ function [all_sol, q_mejor] = inv_kinematics(x_t,y_t,z_t,alpha,beta,gamma, q_pre
     % Sol 2
 
     num = r_33;
-    den = -(r_13*cos(q_111)+r_23*sin(q_111));
+    den = -(r_13*cos(q_11)+r_23*sin(q_11));
 
     if s2_valid
         q234 = atan2(num,den);
@@ -863,7 +591,7 @@ function [all_sol, q_mejor] = inv_kinematics(x_t,y_t,z_t,alpha,beta,gamma, q_pre
     % Sol 3
 
     num = r_33;
-    den = -(r_13*cos(q_111)+r_23*sin(q_111));
+    den = -(r_13*cos(q_11)+r_23*sin(q_11));
 
     if s3_valid
         q234 = atan2(num,den);
@@ -874,7 +602,7 @@ function [all_sol, q_mejor] = inv_kinematics(x_t,y_t,z_t,alpha,beta,gamma, q_pre
     % Sol 4    
 
     num = r_33;
-    den = -(r_13*cos(q_111)+r_23*sin(q_111));
+    den = -(r_13*cos(q_11)+r_23*sin(q_11));
 
     if s4_valid
         q234 = atan2(num,den);
@@ -885,7 +613,7 @@ function [all_sol, q_mejor] = inv_kinematics(x_t,y_t,z_t,alpha,beta,gamma, q_pre
     % Sol 5
 
     num = r_33;
-    den = -(r_13*cos(q_121)+r_23*sin(q_121));
+    den = -(r_13*cos(q_12)+r_23*sin(q_12));
 
     if s5_valid
         q234 = atan2(num,den);
@@ -895,7 +623,7 @@ function [all_sol, q_mejor] = inv_kinematics(x_t,y_t,z_t,alpha,beta,gamma, q_pre
     % Sol 6
 
     num = r_33;
-    den = -(r_13*cos(q_121)+r_23*sin(q_121));
+    den = -(r_13*cos(q_12)+r_23*sin(q_12));
 
     if s6_valid
         q234 = atan2(num,den);
@@ -905,7 +633,7 @@ function [all_sol, q_mejor] = inv_kinematics(x_t,y_t,z_t,alpha,beta,gamma, q_pre
     % Sol 7
 
     num = r_33;
-    den = -(r_13*cos(q_121)+r_23*sin(q_121));
+    den = -(r_13*cos(q_12)+r_23*sin(q_12));
 
     if s7_valid
         q234 = atan2(num,den);
@@ -915,7 +643,7 @@ function [all_sol, q_mejor] = inv_kinematics(x_t,y_t,z_t,alpha,beta,gamma, q_pre
     % Sol 8
 
     num = r_33;
-    den = -(r_13*cos(q_121)+r_23*sin(q_121));
+    den = -(r_13*cos(q_12)+r_23*sin(q_12));
 
     if s8_valid
         q234 = atan2(num,den);
@@ -932,56 +660,56 @@ function [all_sol, q_mejor] = inv_kinematics(x_t,y_t,z_t,alpha,beta,gamma, q_pre
     q_48 = mod(q_48-qlim_4_inf, qlim_4_sup-qlim_4_inf) + qlim_4_inf;
 
     if s1_valid
-        all_sol = [q_111 q_21 q_31 q_41 q_511 q_611];
+        all_sol = [q_11 q_21 q_31 q_41 q_511 q_611];
         if verbose
             disp("S1 valida")
         end
     end
 
     if s2_valid
-        all_sol = [all_sol; q_111 q_22 q_32 q_42 q_511 q_611];
+        all_sol = [all_sol; q_11 q_22 q_32 q_42 q_511 q_611];
         if verbose
             disp("S2 valida")
         end
     end
 
     if s3_valid
-        all_sol = [all_sol; q_111 q_23 q_33 q_43 q_512 q_612];
+        all_sol = [all_sol; q_11 q_23 q_33 q_43 q_512 q_612];
         if verbose
             disp("S3 valida")
         end
     end
 
     if s4_valid
-        all_sol = [all_sol; q_111 q_24 q_34 q_44 q_512 q_612];
+        all_sol = [all_sol; q_11 q_24 q_34 q_44 q_512 q_612];
         if verbose
             disp("S4 valida")
         end
     end
 
     if s5_valid
-        all_sol = [all_sol; q_121 q_25 q_35 q_45 q_521 q_621];
+        all_sol = [all_sol; q_12 q_25 q_35 q_45 q_521 q_621];
         if verbose
             disp("S5 valida")
         end
     end
 
     if s6_valid
-        all_sol = [all_sol; q_121 q_26 q_36 q_46 q_521 q_621];
+        all_sol = [all_sol; q_12 q_26 q_36 q_46 q_521 q_621];
         if verbose
             disp("S6 valida")
         end
     end
 
     if s7_valid
-        all_sol = [all_sol; q_121 q_27 q_37 q_47 q_522 q_622];
+        all_sol = [all_sol; q_12 q_27 q_37 q_47 q_522 q_622];
         if verbose
             disp("S7 valida")
         end
     end
 
     if s8_valid
-        all_sol = [all_sol; q_121 q_28 q_38 q_48 q_522 q_622];
+        all_sol = [all_sol; q_12 q_28 q_38 q_48 q_522 q_622];
         if verbose
             disp("S8 valida")
         end
@@ -991,10 +719,55 @@ function [all_sol, q_mejor] = inv_kinematics(x_t,y_t,z_t,alpha,beta,gamma, q_pre
 
         disp("No se encontraron soluciones para la IK.")
     end
-    
-    if ~isempty(all_sol)
 
-        q_mejor = costo_simple(q_previo, all_sol);
+
+    %% Amplicación de soluciones por periodicidad
+
+    ampl_all_sol = zeros(length(all_sol(:,1)*128),6);
+    idx_max = length(all_sol(:,1));
+    comb = dec2bin(0:63) - '0';
+
+    for i=1:idx_max
+
+        divider = 2^5;
+
+        q_aux = [0 0 0 0 0 0];
+
+        for j=1:6
+
+            if all_sol(i,j) > 0
+                q_aux(j) = all_sol(i,j) -2*pi;
+            else
+                q_aux(j) = all_sol(i,j) +2*pi;
+            end
+
+        end
+
+        for k=1:64
+
+            for l=1:6
+
+                if comb(k,l) == 0
+
+                    ampl_all_sol(k+64*(i-1), l) = all_sol(i,l);
+                else
+
+                    ampl_all_sol(k+64*(i-1), l) = q_aux(l);
+
+                end
+            end
+
+        end
+
+
+    end
+
+
+    %% Cálculo de mejor solución
+    
+    if ~isempty(ampl_all_sol)
+
+        q_mejor = costo_simple(q_previo, ampl_all_sol);
 
     else
 
@@ -1029,19 +802,19 @@ function [all_sol, q_mejor] = inv_kinematics(x_t,y_t,z_t,alpha,beta,gamma, q_pre
 end
 
 
-function q_mejor = costo_simple(q_previo, all_sol)
+function q_mejor = costo_simple(q_previo, ampl_all_sol)
 
     q_mejor = q_previo;
     costo_mejor = inf;
 
-    for i=1:length(all_sol(:,1))
+    for i=1:length(ampl_all_sol(:,1))
 
-        vec_costos = abs(all_sol(i,:)-q_previo);
+        vec_costos = abs(ampl_all_sol(i,:)-q_previo);
         costo_nuevo = sum(vec_costos);
 
         if costo_nuevo < costo_mejor
 
-            q_mejor = all_sol(i,:);
+            q_mejor = ampl_all_sol(i,:);
             costo_mejor = costo_nuevo;
 
         end

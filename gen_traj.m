@@ -42,7 +42,7 @@ function q_traj = gen_traj(R, cpoints_modes, q0, qdmax, qddmax, dt, verbose)
     %% Interpolaciones
 
     N = 50;
-    t_acc = 2;
+    t_acc = qddmax/qdmax;
     idx_end = -1;
 
     for i=1:length(cpoints(:,1))
@@ -62,7 +62,7 @@ function q_traj = gen_traj(R, cpoints_modes, q0, qdmax, qddmax, dt, verbose)
                     continue
                 end
                 
-                WP = zeros(idx_end-i+1, 6);
+                WP = zeros(idx_end+1, 6);
                 break
     
             end
@@ -70,7 +70,7 @@ function q_traj = gen_traj(R, cpoints_modes, q0, qdmax, qddmax, dt, verbose)
             if isempty(q_traj)
                 WP(1,:) = q0;
             else
-                WP(1,:)=q_traj(end,:);
+                WP(1,:)= q_traj(end,:);
             end
 
             for j=i:idx_end
@@ -92,14 +92,8 @@ function q_traj = gen_traj(R, cpoints_modes, q0, qdmax, qddmax, dt, verbose)
             WP(j-i+2,:) = q_mejor;
 
             end
-
-            if i==1
-                q_temp = mstraj(WP, qdmax, [], q0, dt,t_acc');
-            else 
                 
-                q_temp = mstraj(WP(2:end,:), qdmax, [], WP(1,:), dt,t_acc');
-
-            end
+            q_temp = mstraj(WP(2:end,:), qdmax, [], WP(1,:), dt,t_acc');
 
             q_traj = [q_traj; q_temp];
 

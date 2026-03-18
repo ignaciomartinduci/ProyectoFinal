@@ -12,7 +12,15 @@ function [] = tarea(R)
     caja_destino_superior =     [0.22,  0.3,    0.2     0*d+e 180*d+e 0*d+e];
     caja_destino_inferior =     [0.22,  0.3,    0.01    0*d+e 180*d+e 0*d+e];
 
-    q0 = [-1.0600    0.2519   -1.8082   -0.0185    1.5844   -2.6408]; 
+    % Comienzo desde punto aleatorio
+    q1 =  R.qlim(1,1) + (R.qlim(1,2)-R.qlim(1,1))*rand;
+    q2 =  R.qlim(2,1) + (R.qlim(2,2)-R.qlim(2,1))*rand;
+    q3 =  R.qlim(3,1) + (R.qlim(3,2)-R.qlim(3,1))*rand;
+    q4 =  R.qlim(4,1) + (R.qlim(4,2)-R.qlim(4,1))*rand;
+    q5 =  R.qlim(5,1) + (R.qlim(5,2)-R.qlim(5,1))*rand;
+    q6 =  -2*pi + (2*pi-2*pi)*rand;
+    
+    q0 = [q1 q2 q3 q4 q5 q6];
    %     -1.0600    0.2519   -1.8082   -0.0185    1.5844   -2.6408
    % -1.0600   -1.4227    1.8082   -1.9602    1.5844   -2.6408
    % -1.0600   -0.5988   -0.8019    2.9676   -1.5844    0.5008
@@ -46,8 +54,8 @@ function [] = tarea(R)
     %% Visualización
 
     % grafQaE(R, q_traj);
-    myAnimate(R,q_traj, 0.0001);
-
+    % myAnimate(R,q_traj, 0.0001);
+    % 
     % qd_traj  = zeros(size(q_traj));
     % qdd_traj = zeros(size(q_traj));
     % for j = 1:size(q_traj,2)

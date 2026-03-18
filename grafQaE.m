@@ -30,17 +30,18 @@ function [] = grafQaE(R, q_traj)
     figure;
         hold on;
         subplot(6,1,1);
-        plot(x); grid on; xlabel('t'), ylabel('x'), legend('x');
+        plot(x); grid minor; xlabel('t'); ylabel('x');
         subplot(6,1,2);
-        plot(y); grid on; xlabel('t'), ylabel('y'), legend('y');
+        plot(y); grid minor; xlabel('t'); ylabel('y');
         subplot(6,1,3);
-        plot(z); grid on; xlabel('t'), ylabel('z'), legend('z');
+        plot(z); grid minor; xlabel('t'); ylabel('z');
         subplot(6,1,4);
-        plot(roll); grid on; xlabel('t'), ylabel('roll'), legend('roll');
+        plot(roll); grid minor; xlabel('t'); ylabel('roll');
         subplot(6,1,5);
-        plot(pitch); grid on; xlabel('t'), ylabel('pitch'), legend('pitch');
+        plot(pitch); grid minor; xlabel('t'); ylabel('pitch');
         subplot(6,1,6);
-        plot(yaw); grid on; xlabel('t'), ylabel('yaw'), legend('yaw');
+        plot(yaw); grid minor; xlabel('t'); ylabel('yaw');
+        sgtitle('Trayectoria cartesiana');
         hold off;
 
 end

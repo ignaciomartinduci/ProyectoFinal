@@ -28,8 +28,9 @@
 
     
     q_offset = [0, -pi/2, 0, pi/2, 0, 0];
-    qdmax = [pi pi pi 2*pi 2*pi 2*pi]; % Velocidades máximas de cada articulación
-    
+    qdmax = [pi pi pi pi pi pi]; % Velocidades máximas de cada articulación
+    qddmax = [2*pi 2*pi 2*pi 2*pi 2*pi 2*pi];
+
     R = SerialLink(dh,'name','DR - 1');
     R.offset = q_offset;
     base = transl(0,0,d_b);
@@ -37,6 +38,7 @@
     R.base = base;
     R.tool = tool;
     R_qdmax = qdmax;
+    R_qddmax = qddmax;
     
     R.qlim(1,1:2) = [-360,  360]*pi/180; 
     R.qlim(2,1:2) = [-360,  360]*pi/180;

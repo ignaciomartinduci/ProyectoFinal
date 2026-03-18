@@ -4,7 +4,7 @@ function [] = test_inv_kinematics(R ,TEST_LOOP_IK)
     
     d = pi/180; 
     e = 0.01;
-    q_tik = [-4.7878   -0.0206    5.7773   -2.0058    1.0715   -6.2832];
+    q_tik = [1.8358    0.4922   -1.9151   -0.5557    1.7815    1.2078];
     %R.plot(q_tik)
 
     q_previo = [29 29 29 29 29 29]*d;
@@ -77,16 +77,19 @@ function [] = test_inv_kinematics(R ,TEST_LOOP_IK)
     disp("La mejor solución es")
     disp(q_mejor)
     
-    if ~isempty(sol_tik)
+    %% PLOT (! CUIDADO SON 512 SOLUCIONES MÁXIMO)
+    % if ~isempty(sol_tik)
+    % 
+    %     figure;
+    %     for i=1:length(sol_tik(:,1))
+    % 
+    %         R.plot(sol_tik(i,:), "scale", 0.5);
+    %         input("Mostrando solución... Enter para ver siguiente o terminar")
+    % 
+    %     end
+    % end
 
-        figure;
-        for i=1:length(sol_tik(:,1))
-
-            R.plot(sol_tik(i,:), "scale", 0.5);
-            input("Mostrando solución... Enter para ver siguiente o terminar")
-
-        end
-    end
+    %% LOOP TESTING
     
     if TEST_LOOP_IK
 
