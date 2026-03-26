@@ -11,7 +11,7 @@ robot_1;
 
 %% ======================
 
-disp("== INICIANDO PROGRAMA ==");
+disp("== INICIANDO PROGRAMA ==");   
     
 if TEST_WORKSPACE
 

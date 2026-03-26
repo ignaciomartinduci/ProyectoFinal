@@ -574,7 +574,7 @@ function [ampl_all_sol, q_mejor] = inv_kinematics(x_t,y_t,z_t,alpha,beta,gamma, 
 
     % Sol 1
 
-        num = r_33;
+    num = r_33;
     den = -(r_13*cos(q_11)+r_23*sin(q_11));
 
     if s1_valid
@@ -764,7 +764,6 @@ function [ampl_all_sol, q_mejor] = inv_kinematics(x_t,y_t,z_t,alpha,beta,gamma, 
 
     end
 
-
     %% Cálculo de mejor solución
     
     if ~isempty(ampl_all_sol)
@@ -819,7 +818,7 @@ function q_mejor = costo_simple(q_previo, ampl_all_sol, pose_config)
 
                 if ampl_all_sol(i,j) > pi || ampl_all_sol(i,j) < -pi
 
-                    stop = 1
+                    stop = 1;
                 end
             end
 
