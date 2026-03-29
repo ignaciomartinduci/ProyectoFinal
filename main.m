@@ -1,8 +1,12 @@
 clc; clear; close all;
 
-addpath("./common");
-addpath("./rtb");
-addpath("smtb");
+addpath("./third_party/common");
+addpath("./third_party/rtb");
+addpath("./third_party/smtb");
+addpath("./models");
+addpath("./modules");
+addpath("./tests");
+addpath("./visualization");
 
 %% ======================
 

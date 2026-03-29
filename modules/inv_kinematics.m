@@ -835,7 +835,7 @@ function q_mejor = costo_simple(q_previo, ampl_all_sol, pose_config)
 
         if costo_nuevo < costo_mejor
 
-            q_mejor = ampl_all_sol(i,:)
+            q_mejor = ampl_all_sol(i,:);
             costo_mejor = costo_nuevo;
 
         end
