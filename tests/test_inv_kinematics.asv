@@ -1,4 +1,4 @@
-function [] = test_inv_kinematics(R ,TEST_LOOP_IK)
+function [] = test_inv_kinematics(R ,TEST_LOOP_IK, PRINT_SOLUTIONS)
     disp(' ');
     disp("---> TEST INV_KINEMATICS")
     

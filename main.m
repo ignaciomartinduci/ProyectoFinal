@@ -25,7 +25,7 @@ end
 
 if TEST_INV_KINEMATICS
     
-    test_inv_kinematics(R, TEST_LOOP_IK);
+    test_inv_kinematics(R, TEST_LOOP_IK, PRINT_SOLUTIONS);
 
 end
 

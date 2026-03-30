@@ -36,9 +36,8 @@ function q_traj = gen_traj(R, cpoints_input, q0, qdmax, qddmax, dt, verbose)
 
     %% Desglose de argumentos
 
-    cpoints = str2double(cpoints_input(:,1:6));
-    modes = str2double(cpoints_input(:,7));
-    cpoint_config = cpoints_input(:,8);
+    cpoints = cpoints_input(:,1:6);
+    modes = (cpoints_input(:,7));
 
     %% Interpolaciones
 

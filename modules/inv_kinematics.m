@@ -727,7 +727,9 @@ function [ampl_all_sol, q_mejor] = inv_kinematics(x_t,y_t,z_t,alpha,beta,gamma, 
 
     %% Amplicación de soluciones por periodicidad
 
-    ampl_all_sol = zeros(length(all_sol(:,1)*128),6);
+    if ~isempty(all_sol)
+ 
+    ampl_all_sol = zeros(length(all_sol(:,1)*64),6);
     idx_max = length(all_sol(:,1));
     comb = dec2bin(0:63) - '0';
 
@@ -764,15 +766,19 @@ function [ampl_all_sol, q_mejor] = inv_kinematics(x_t,y_t,z_t,alpha,beta,gamma, 
 
     end
 
+    end
+    
+
     %% Cálculo de mejor solución
     
-    if ~isempty(ampl_all_sol)
+    if ~isempty(all_sol)
 
         q_mejor = costo_simple(q_previo, ampl_all_sol, pose_config);
 
     else
 
         q_mejor = q_previo;
+        ampl_all_sol = q_previo;
     end
 
 
@@ -797,6 +803,7 @@ function [ampl_all_sol, q_mejor] = inv_kinematics(x_t,y_t,z_t,alpha,beta,gamma, 
     %     end
     % 
     % end
+
 
 
    

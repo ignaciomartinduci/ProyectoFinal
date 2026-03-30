@@ -31,19 +31,19 @@ function [] = tarea(R)
    %  1.0439   -0.2518    1.8038    0.0325   -1.5673    2.6046
    % 
     trayectoria = [
-    punto_medio 0 "NONE"
-    aux_1 0 "NONE"
-    caja_origen_superior 0 "NONE"
-    caja_origen_inferior 1 "NONE"
-    caja_origen_superior 1 "NONE"
-    aux_1 0 "NONE"
-    punto_medio 0 "BASIC"
-    aux_2 0 "NONE"
-    caja_destino_superior 0 "NONE"
-    caja_destino_inferior 1 "NONE"
-    caja_destino_superior 1 "NONE"
-    aux_2 0 "NONE" 
-    punto_medio 0 "NONE"
+    punto_medio 0 
+    aux_1 0 
+    caja_origen_superior 0 
+    caja_origen_inferior 1 
+    caja_origen_superior 1 
+    aux_1 0
+    punto_medio 0 
+    aux_2 0 
+    caja_destino_superior 0 
+    caja_destino_inferior 1 
+    caja_destino_superior 1 
+    aux_2 0 
+    punto_medio 0 
     ]; 
 
     qdmax = [180 180 180 360 360 360]*d;

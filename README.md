@@ -53,7 +53,8 @@ main.m
         │
         ├── test_inv_kinematics.m
         │   └── inv_kinematics.m
-        │       └── (Validación IK + loop de testing)
+        │       └── (Validación IK + loop de testing + visualización soluciones geométricas y periódicas)
+        │        
         │
         ├── singularities.m
         │   └── (Determinante del Jacobiano → detección de singularidades)

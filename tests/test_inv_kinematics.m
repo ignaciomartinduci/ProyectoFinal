@@ -1,4 +1,4 @@
-function [] = test_inv_kinematics(R ,TEST_LOOP_IK)
+function [] = test_inv_kinematics(R ,TEST_LOOP_IK, PRINT_SOLUTIONS)
     disp(' ');
     disp("---> TEST INV_KINEMATICS")
     
@@ -77,17 +77,9 @@ function [] = test_inv_kinematics(R ,TEST_LOOP_IK)
     disp("La mejor solución es")
     disp(q_mejor)
     
-    %% PLOT (! CUIDADO SON 512 SOLUCIONES MÁXIMO)
-    % if ~isempty(sol_tik)
-    % 
-    %     figure;
-    %     for i=1:length(sol_tik(:,1))
-    % 
-    %         R.plot(sol_tik(i,:), "scale", 0.5);
-    %         input("Mostrando solución... Enter para ver siguiente o terminar")
-    % 
-    %     end
-    % end
+    %% IMPRESIÓN DE SOLUCIONES
+
+    solutions(R, sol_tik);
 
     %% LOOP TESTING
     

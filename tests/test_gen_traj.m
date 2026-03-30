@@ -1,7 +1,7 @@
     function [] = test_gen_traj(R)
 
     d = pi/180;
-    dt = 0.001;
+    dt = 0.1;
 
     cpoints_modes = [
         0.15 0.15 0.15 10*d 5*d 20*d 0
@@ -13,19 +13,13 @@
     qdmax = [180 180 180 360 360 360]*d;
     qddmax = [800 800 800 800 800 800]*d;
 
-    q_traj = gen_traj(R,cpoints_modes, q0, qdmax, qddmax, dt);
+    q_traj = gen_traj(R, cpoints_modes, q0, qdmax, qddmax, dt, 0);
 
     fps = 24;
     dt = 1/fps;
 
     R.plot(q_traj(1,:),'workspace',[-1,1,-1,1,-1,1],'trail',{'r','LineWidth',2}, 'scale',0.5);
 
-    for k=1:size(q_traj,1)
-
-        R.animate(q_traj(k,:));
-        drawnow limitrate;
-        pause(dt);
-
-    end
+    
 
 end
