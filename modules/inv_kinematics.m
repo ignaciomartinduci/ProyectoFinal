@@ -773,7 +773,7 @@ function [ampl_all_sol, q_mejor] = inv_kinematics(x_t,y_t,z_t,alpha,beta,gamma, 
     
     if ~isempty(all_sol)
 
-        q_mejor = costo_simple(q_previo, ampl_all_sol, pose_config);
+        q_mejor = costo_simple(q_previo, ampl_all_sol, all_sol, pose_config);
 
     else
 
@@ -810,45 +810,46 @@ function [ampl_all_sol, q_mejor] = inv_kinematics(x_t,y_t,z_t,alpha,beta,gamma, 
 end
 
 
-function q_mejor = costo_simple(q_previo, ampl_all_sol, pose_config)
+function q_mejor = costo_simple(q_previo, ampl_all_sol, all_sol, pose_config)
 
     q_mejor = q_previo;
     costo_mejor = inf;
 
-    for i=1:length(ampl_all_sol(:,1))
+    
 
-        if pose_config == "BASIC"
+    if pose_config == "FORCE"
 
-            stop = 0;
+        for  i = 1:size(all_sol,1)
 
-            for j=1:6
+        dq = wrapToPi(all_sol(i,:) - q_previo);
 
-                if ampl_all_sol(i,j) > pi || ampl_all_sol(i,j) < -pi
-
-                    stop = 1;
-                end
-            end
-
-            if stop == 1
-
-                continue
-
-            end           
-
-        end
-
-        vec_costos = abs(ampl_all_sol(i,:)-q_previo);
-        costo_nuevo = sum(vec_costos);
+        costo_nuevo = sum(abs(dq));
 
         if costo_nuevo < costo_mejor
-
-            q_mejor = ampl_all_sol(i,:);
+            q_mejor = q_previo + dq;
             costo_mejor = costo_nuevo;
+        end
 
         end
 
+    else
 
+        for  i = 1:size(ampl_all_sol,1)
+
+        dq = wrapToPi(ampl_all_sol(i,:) - q_previo);
+
+        costo_nuevo = sum(abs(dq));
+
+        if costo_nuevo < costo_mejor
+            q_mejor = q_previo + dq;
+            costo_mejor = costo_nuevo;
+        end
+
+        end
     end
+
+    
+
 
 end
 

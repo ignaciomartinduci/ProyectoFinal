@@ -2,6 +2,12 @@ function [] = tarea(R)
 
     cfg = config();
     dt = cfg.traj_dt;
+    qdmax = cfg.qdmax;
+    qddmax = cfg.qddmax;
+    vmax = cfg.vmax;
+    amax = cfg.amax;
+    wmax = cfg.wmax;
+    alphamax = cfg.alphamax;
 
     d = pi/180;
     e=0.01;
@@ -25,7 +31,7 @@ function [] = tarea(R)
     q6 =  -2*pi + (2*pi-2*pi)*rand;
     
     q0 = [q1 q2 q3 q4 q5 q6];
-   %     -1.0600    0.2519   -1.8082   -0.0185    1.5844   -2.6408
+   % -1.0600    0.2519   -1.8082   -0.0185    1.5844   -2.6408
    % -1.0600   -1.4227    1.8082   -1.9602    1.5844   -2.6408
    % -1.0600   -0.5988   -0.8019    2.9676   -1.5844    0.5008
    % -1.0600   -1.3561    0.8019    2.1210   -1.5844    0.5008
@@ -34,41 +40,37 @@ function [] = tarea(R)
    %  1.0439    1.4190   -1.8038    1.9692   -1.5673    2.6046
    %  1.0439   -0.2518    1.8038    0.0325   -1.5673    2.6046
    % 
-   q0 = q_punto_medio;
+   % q0 = q_punto_medio;
     trayectoria = [
-    punto_medio 1 %
-    aux_1 1 %
-    caja_origen_superior 1 %
+    punto_medio 0 %
+    % aux_1 0 %
+    caja_origen_superior 0 %
     caja_origen_inferior 1 
     caja_origen_superior 1 
-    aux_1 1 %
-    punto_medio 1 %
-    aux_2 1 %
-    caja_destino_superior 1 %
+    % % aux_1 0 %
+    punto_medio 0 %
+    % % aux_2 0 %
+    caja_destino_superior 0 %
     caja_destino_inferior 1 
     caja_destino_superior 1 
-    aux_2 1 %
-    punto_medio 1  %
+    % % aux_2 0 %
+    punto_medio 0
     ]; 
 
-    qdmax = [180 180 180 360 360 360]*d;
-    qddmax = [800 800 800 800 800 800]*d;
-
-    q_traj = gen_traj(R, trayectoria, q0, qdmax, qddmax, 0, 1, 1, 2*pi, 2*pi);
-
+    q_traj = gen_traj(R, trayectoria, q0, qdmax, qddmax, 0, vmax, amax, wmax, alphamax);
+    
     %% Visualización
-
-    % grafQaE(R, q_traj);
     myAnimate(R,q_traj);
 
-    qd_traj  = zeros(size(q_traj));
-    qdd_traj = zeros(size(q_traj));
-    for j = 1:size(q_traj,2)
-        qd_traj(:,j)  = gradient(q_traj(:,j), dt);  
-        qdd_traj(:,j) = gradient(qd_traj(:,j), dt);  
-    end
+    % grafQaE(R, q_traj);
+    % 
+    % qd_traj  = zeros(size(q_traj));
+    % qdd_traj = zeros(size(q_traj));
+    % for j = 1:size(q_traj,2)
+    %     qd_traj(:,j)  = gradient(q_traj(:,j), dt);  
+    %     qdd_traj(:,j) = gradient(qd_traj(:,j), dt);  
 
-    grafQ(q_traj,qd_traj,qdd_traj);
+    % grafQ(q_traj,qd_traj,qdd_traj);
 
 
 end

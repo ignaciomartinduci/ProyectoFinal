@@ -27,9 +27,9 @@ function [] = test_inv_kinematics(R ,TEST_LOOP_IK, PRINT_SOLUTIONS)
     gamma_tik = rpy_tik(3);
 
     % override
-    x_tik = 0;
+    x_tik = -0.1;
     y_tik = 0.3;
-    z_tik = 0.25;
+    z_tik = 0.22;
     % 
     alpha_tik = 0*d+e;
     beta_tik = 180*d+e;
@@ -79,7 +79,7 @@ function [] = test_inv_kinematics(R ,TEST_LOOP_IK, PRINT_SOLUTIONS)
     
     %% IMPRESIÓN DE SOLUCIONES
 
-    solutions(R, sol_tik);
+    % solutions(R, sol_tik);
 
     %% LOOP TESTING
     

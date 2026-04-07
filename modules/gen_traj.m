@@ -38,35 +38,43 @@ function q_traj = gen_traj(R, cpoints_input, q0, qdmax, qddmax, verbose, amax, v
 
     %% Interpolaciones
 
-    t_acc = qddmax/qdmax;
+    t_acc = max(qdmax./qddmax);
     idx_end = -1;
+
+    first = "FORCE";
 
     for i=1:length(cpoints(:,1))
 
-        if i <= idx_end 
-            continue
-        end
-
-        if modes(i) == 0
+        if modes(i) == 0 && i > idx_end
 
             idx_end = i;
 
-            for j=i+1:length(cpoints(:,1))
+            if i<length(cpoints(:,1))
+                for j=i+1:length(cpoints(:,1))
             
-                if modes(j) == 0 && j < length(cpoints(:,1))
-                    idx_end = idx_end +1;
-                    continue
-                end
-                
-                WP = zeros(idx_end+1, 6);
-                break
+                    if modes(j) == 1
+                        break;
+                    end
+        
+                    if modes(j) == 0
+                        idx_end = idx_end +1;
+                    end
     
+                end
             end
+
+            WP = zeros(idx_end-i+2, 6);
 
             if isempty(q_traj)
                 WP(1,:) = q0;
             else
-                WP(1,:)= q_traj(end,:);
+                WP(1,:) = q_traj(end,:);
+            end
+
+            if ~isempty(q_traj)
+                q_previo = q_traj(end,:);
+            else
+                q_previo = q0;
             end
 
             for j=i:idx_end
@@ -79,11 +87,15 @@ function q_traj = gen_traj(R, cpoints_input, q0, qdmax, qddmax, verbose, amax, v
                 gamma = cpoints(j,6);
 
                 if ~isempty(q_traj)
-                    [~, q_mejor] = inv_kinematics(x,y,z,alpha,beta,gamma,q_traj(end,:),verbose,R);
+                    [~, q_mejor] = inv_kinematics(x,y,z,alpha,beta,gamma,q_previo,verbose,R, first);
+                    first = "NONE";
                 else
-                    [~, q_mejor] = inv_kinematics(x,y,z,alpha,beta,gamma,q0,verbose,R);
+                    [~, q_mejor] = inv_kinematics(x,y,z,alpha,beta,gamma,q0,verbose,R, first);
+                    first = "NONE";
                    
                 end
+
+                q_previo = q_mejor;
 
                 WP(j-i+2,:) = q_mejor;
 
@@ -94,10 +106,15 @@ function q_traj = gen_traj(R, cpoints_input, q0, qdmax, qddmax, verbose, amax, v
             %   - control de aceleración articular mediente argument t_acc = qdmax/qddmax
             %   
             q_temp = mstraj(WP(2:end,:), qdmax, [], WP(1,:), dt,t_acc');
+            scale = scale_velocities_j2c(R, q_temp, qdmax, qddmax, vmax, amax, wmax, alphamax, dt);
+
+            t_acc_scaled = t_acc*scale;
+
+            q_temp = mstraj(WP(2:end,:), qdmax, [], WP(1,:), dt,t_acc_scaled');
 
             q_traj = [q_traj; q_temp];
 
-        else
+        elseif modes(i)==1
 
             if i == 1
            
@@ -212,9 +229,11 @@ function q_traj = gen_traj(R, cpoints_input, q0, qdmax, qddmax, verbose, amax, v
 
                 
                 if ~isempty(q_traj)
-                    [~, q_mejor] = inv_kinematics(x,y,z,alpha,beta,gamma,q_traj(end,:),verbose,R);
+                    [~, q_mejor] = inv_kinematics(x,y,z,alpha,beta,gamma,q_traj(end,:),verbose,R, first);
+                    first = "NONE";
                 else
-                    [~, q_mejor] = inv_kinematics(x,y,z,alpha,beta,gamma,q0,verbose,R);
+                    [~, q_mejor] = inv_kinematics(x,y,z,alpha,beta,gamma,q0,verbose,R, first);
+                    first = "NONE";
                 end
 
                 q_traj = [q_traj; q_mejor];
@@ -223,39 +242,7 @@ function q_traj = gen_traj(R, cpoints_input, q0, qdmax, qddmax, verbose, amax, v
 
         end
 
-    end
-
-    q_traj = post_process(q_traj);
-
-end
-
-
-function q_traj2 = post_process(q_traj)
-
-
-    q_thr = 30*pi/180;
-
-    q_p = q_traj(1,:);
-
-    q_traj2 = q_p;
-
-    for i=2:length(q_traj(:,1))
-
-        q_diff = q_traj(i,:) - q_p;
-
-        if max(abs(q_diff)) > q_thr
         
-            for j=1:50
-
-                q_i = q_p + (q_traj(i,:)-q_p)/(100-j);
-                q_traj2 = [q_traj2; q_i];
-
-            end
-                
-        end
-
-        q_traj2 = [q_traj2;q_traj(i,:)];
-        q_p = q_traj(i,:);
 
     end
 
@@ -289,7 +276,7 @@ function scale = scale_velocities_c2j(R, T, qdmax, qddmax, vmax, amax, wmax, alp
         Jinv = pinv(J);
 
 
-        for j = 1:6
+        for j = 1:6 % Analizo la saturación de movimiento de cada articulación
             
             Jv_row = Jinv(j,1:3);   
             Jw_row = Jinv(j,4:6);   
@@ -307,6 +294,7 @@ function scale = scale_velocities_c2j(R, T, qdmax, qddmax, vmax, amax, wmax, alp
     scale_qdd = max(scale_qdd_all, [], 'all');
 
     scale = max([1, scale_qd, scale_qdd]);
+    scale = 1;
 
 end
 
@@ -338,5 +326,58 @@ function tf = calculate_tf(T_0, T_1, vmax, amax, wmax, alphamax)
     tf = max([tf_v, tf_a, tf_w, tf_alpha]); % Elección del peor caso, evita sobrepasar ambos
 
 end
+
+function scale = scale_velocities_j2c(R, qtraj, qdmax, qddmax, vmax, amax, wmax, alphamax, dt)
+
+    N = length(qtraj(:,1));
+    fs = 1.25;
+    scale_v_all  = zeros(N,6);
+    scale_w_all  = zeros(N,6);
+    scale_a_all  = zeros(N,6);
+    scale_alpha_all = zeros(N,6);
+    
+    qdtraj  = zeros(size(qtraj));
+    qddtraj = zeros(size(qtraj));
+    
+    for j = 1:6
+        qdtraj(:,j)  = gradient(qtraj(:,j),  dt);
+        qddtraj(:,j) = gradient(qdtraj(:,j), dt);
+    end
+    
+    qddmax_traj = max(abs(qddtraj));
+
+    scale = max((qddmax_traj./qddmax)*fs);
+
+    for i=1:N
+
+        J = R.jacob0(qtraj(i,:));
+
+        for j=1:6
+
+            Jv_row = J(1:3,j);
+            Jw_row = J(4:6,j);
+
+            nv = norm(Jv_row);
+            nw = norm(Jw_row);
+
+            scale_v_all(i,j) = (nv * qdmax(j)) / vmax;
+            scale_w_all(i,j) = (nw * qdmax(j)) / wmax;
+            scale_a_all(i,j)     = (nv * qddmax(j)) / amax;
+            scale_alpha_all(i,j) = (nw * qddmax(j)) / alphamax;
+
+        end
+    end
+
+    scale_v     = max(scale_v_all,     [], 'all');
+    scale_w     = max(scale_w_all,     [], 'all');
+    scale_a     = max(scale_a_all,     [], 'all');
+    scale_alpha = max(scale_alpha_all, [], 'all');
+
+    scale_2 = max([1, scale_v, scale_w, scale_a, scale_alpha]);
+
+    scale = max([scale,scale_2]);
+    
+end
+
 
 
