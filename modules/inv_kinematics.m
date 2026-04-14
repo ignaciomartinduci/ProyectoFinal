@@ -32,6 +32,7 @@ function [ampl_all_sol, q_mejor] = inv_kinematics(x_t,y_t,z_t,alpha,beta,gamma, 
     y = T_06(2,4);
     z = T_06(3,4);
 
+    d_1 = R.links(1).d;
     d_3 = R.links(3).d;
     d_5 = R.links(5).d;
 
@@ -278,7 +279,7 @@ function [ampl_all_sol, q_mejor] = inv_kinematics(x_t,y_t,z_t,alpha,beta,gamma, 
             s2_valid = 0;
         end
     
-        a = -d_5*A+z;
+        a = -d_5*A+z-d_1;
         b = d_5*B-x*cos(q_11)-y*sin(q_11);  
     
         C = a_2^2+a^2+b^2-a_3^2;
@@ -304,7 +305,7 @@ function [ampl_all_sol, q_mejor] = inv_kinematics(x_t,y_t,z_t,alpha,beta,gamma, 
             s4_valid = 0;
         end
     
-        a = -d_5*A+z;
+        a = -d_5*A+z-d_1;
         b = d_5*B-x*cos(q_11)-y*sin(q_11);
     
         C = a_2^2+a^2+b^2-a_3^2;
@@ -330,7 +331,7 @@ function [ampl_all_sol, q_mejor] = inv_kinematics(x_t,y_t,z_t,alpha,beta,gamma, 
             s6_valid = 0;
         end
     
-        a = -d_5*A+z;
+        a = -d_5*A+z-d_1;
         b = d_5*B-x*cos(q_12)-y*sin(q_12);
     
         C = a_2^2+a^2+b^2-a_3^2;
@@ -356,7 +357,7 @@ function [ampl_all_sol, q_mejor] = inv_kinematics(x_t,y_t,z_t,alpha,beta,gamma, 
             s8_valid = 0;
         end
     
-        a = -d_5*A+z;
+        a = -d_5*A+z-d_1;
         b = d_5*B-x*cos(q_12)-y*sin(q_12);  
     
         C = a_2^2+a^2+b^2-a_3^2;
@@ -423,7 +424,7 @@ function [ampl_all_sol, q_mejor] = inv_kinematics(x_t,y_t,z_t,alpha,beta,gamma, 
         A = (r_13*cos(q_11)+r_23*sin(q_11))/(-sin(q_511));
         B = -r_33/-sin(q_511);
     
-        a = -d_5*A+z;
+        a = -d_5*A+z-d_1;
         b = d_5*B-x*cos(q_11)-y*sin(q_11);  
     
         num = -a_2*sin(q_21)-b;
@@ -440,7 +441,7 @@ function [ampl_all_sol, q_mejor] = inv_kinematics(x_t,y_t,z_t,alpha,beta,gamma, 
         A = (r_13*cos(q_11)+r_23*sin(q_11))/(-sin(q_511));
         B = -r_33/-sin(q_511);
     
-        a = -d_5*A+z;
+        a = -d_5*A+z-d_1;
         b = d_5*B-x*cos(q_11)-y*sin(q_11);  
     
         num = -a_2*sin(q_22)-b;
@@ -459,7 +460,7 @@ function [ampl_all_sol, q_mejor] = inv_kinematics(x_t,y_t,z_t,alpha,beta,gamma, 
         A = (r_13*cos(q_11)+r_23*sin(q_11))/(-sin(q_512));
         B = -r_33/-sin(q_512);
     
-        a = -d_5*A+z;
+        a = -d_5*A+z-d_1;
         b = d_5*B-x*cos(q_11)-y*sin(q_11);
     
         num = -a_2*sin(q_23)-b;
@@ -476,7 +477,7 @@ function [ampl_all_sol, q_mejor] = inv_kinematics(x_t,y_t,z_t,alpha,beta,gamma, 
         A = (r_13*cos(q_11)+r_23*sin(q_11))/(-sin(q_512));
         B = -r_33/-sin(q_512);
     
-        a = -d_5*A+z;
+        a = -d_5*A+z-d_1;
         b = d_5*B-x*cos(q_11)-y*sin(q_11);
     
         num = -a_2*sin(q_24)-b;
@@ -495,7 +496,7 @@ function [ampl_all_sol, q_mejor] = inv_kinematics(x_t,y_t,z_t,alpha,beta,gamma, 
         A = (r_13*cos(q_12)+r_23*sin(q_12))/(-sin(q_521));
         B = -r_33/-sin(q_521);
     
-        a = -d_5*A+z;
+        a = -d_5*A+z-d_1;
         b = d_5*B-x*cos(q_12)-y*sin(q_12);
     
         num = -a_2*sin(q_25)-b;
@@ -512,7 +513,7 @@ function [ampl_all_sol, q_mejor] = inv_kinematics(x_t,y_t,z_t,alpha,beta,gamma, 
         A = (r_13*cos(q_12)+r_23*sin(q_12))/(-sin(q_521));
         B = -r_33/-sin(q_521);
     
-        a = -d_5*A+z;
+        a = -d_5*A+z-d_1;
         b = d_5*B-x*cos(q_12)-y*sin(q_12);
     
         num = -a_2*sin(q_26)-b;
@@ -531,7 +532,7 @@ function [ampl_all_sol, q_mejor] = inv_kinematics(x_t,y_t,z_t,alpha,beta,gamma, 
         A = (r_13*cos(q_12)+r_23*sin(q_12))/(-sin(q_522));
         B = -r_33/-sin(q_522);
     
-        a = -d_5*A+z;
+        a = -d_5*A+z-d_1;
         b = d_5*B-x*cos(q_12)-y*sin(q_12);  
     
         num = -a_2*sin(q_27)-b;
@@ -548,7 +549,7 @@ function [ampl_all_sol, q_mejor] = inv_kinematics(x_t,y_t,z_t,alpha,beta,gamma, 
         A = (r_13*cos(q_12)+r_23*sin(q_12))/(-sin(q_522));
         B = -r_33/-sin(q_522);
     
-        a = -d_5*A+z;
+        a = -d_5*A+z-d_1;
         b = d_5*B-x*cos(q_12)-y*sin(q_12);
     
         num = -a_2*sin(q_28)-b;

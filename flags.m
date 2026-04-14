@@ -5,4 +5,4 @@ TEST_WORKSPACE = 0; % Prueba del espacio de trabajo
 SINGULARITIES = 0; % Busca y verifica puntos singulares
     PLOT_SINGULARITIES = 0; % Plot 3D de posturas donde existe singularidad
 TEST_GEN_TRAJ = 0; % Prueba ejemplo de la generación de trayectorias
-TAREA = 1; % Tarea principal
+TAREA = 0; % Tarea principal

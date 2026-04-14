@@ -18,7 +18,7 @@ robot_1;
 disp("== INICIANDO PROGRAMA ==");   
     
 if TEST_WORKSPACE
-
+    
     test_workspace(R);
 
 end
