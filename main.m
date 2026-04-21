@@ -15,16 +15,16 @@ robot_1;
 
 %% ======================
 
-disp("== INICIANDO PROGRAMA ==");   
-    
+disp("== INICIANDO PROGRAMA ==");
+
 if TEST_WORKSPACE
-    
+
     test_workspace(R);
 
 end
 
 if TEST_INV_KINEMATICS
-    
+
     test_inv_kinematics(R, TEST_LOOP_IK, PRINT_SOLUTIONS);
 
 end
@@ -32,10 +32,10 @@ end
 if SINGULARITIES
 
     singularities(R, PLOT_SINGULARITIES);
-    
+
 end
 
-if TEST_GEN_TRAJ 
+if TEST_GEN_TRAJ
 
     test_gen_traj(R);
 end

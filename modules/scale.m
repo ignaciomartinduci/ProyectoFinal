@@ -2,7 +2,7 @@
 input_folder  = 'C:\Users\Usuario\Desktop\FING\Proyecto Final\matlab\models\CAD\originales';
 output_folder = 'C:\Users\Usuario\Desktop\FING\Proyecto Final\matlab\models\CAD';
 scale_factor  = 1000;   % metros → mm  (si tus STL están en metros)
-                        % usar 1 si ya están en mm
+% usar 1 si ya están en mm
 
 % Lista de archivos a escalar (ponés los nombres de tus 3 cuerpos)
 stl_files = {
@@ -13,7 +13,7 @@ stl_files = {
     'link4.stl', ...
     'link5.stl', ...
     'link6.stl'
-};
+    };
 
 % --- PROCESAMIENTO ---
 if ~exist(output_folder, 'dir')
