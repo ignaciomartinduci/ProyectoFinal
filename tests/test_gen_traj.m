@@ -1,4 +1,4 @@
-function [] = test_gen_traj(R)
+function [] = test_gen_traj(R, cad_path)
 
 cfg = config();
 
@@ -30,7 +30,7 @@ q_traj = gen_traj(R, cpoints_modes, q0, qdmax, qddmax, 0, vmax, amax, wmax, alph
 
 % R.plot(q_traj,'workspace',[-1,1,-1,1,-1,1],'trail',{'r','LineWidth',2}, 'scale',0.5);
 
-myAnimate(R,q_traj);
+myAnimate(R, q_traj, cad_path);
 
 grafQaE(R, q_traj);
 

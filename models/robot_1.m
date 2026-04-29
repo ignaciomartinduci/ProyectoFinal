@@ -1,11 +1,11 @@
 d_b = 0.250; % ajustar
 d_1 = d_b;
 d_2 = 0;
-d_3 = 0.150+0.105;
+d_3 = 0.150+0.105+0.040;
 d_4 = 0;
 d_5 = 0.100;
 d_6 = 0;
-TCP = 0.245 ;%0.245; % ajustar% 0.15 a 0.245
+TCP = 0.145+0.045;% Longitud gripper + distancia origen sistema 5 a punto de colocación de la tool
 
 a_1 = 0;
 a_2 = 0.250;
@@ -28,7 +28,7 @@ dh = [
 
 
 q_offset = [0, -pi/2, 0, pi/2, 0, 0];
-qdmax = [pi pi pi pi pi pi]; % Velocidades máximas de cada articulación
+qdmax = [pi pi pi pi pi pi]; % Velocidades máximas de cada articulación
 qddmax = [2*pi 2*pi 2*pi 2*pi 2*pi 2*pi];
 
 R = SerialLink(dh,'name','DR - 1');
@@ -49,31 +49,36 @@ R.qlim(6,1:2) = [-1e6,1e6]*pi/180;
 
 q_0 = [15,20,-15,20,45,5]*pi/180;
 q_0 = [-pi/5 -pi/5 -pi/5 -pi/5 -pi/5 -pi/5];
+q_0 = [0 0 0 0 0 0];
 
 % path = [pwd, '/models/CAD'];
-% 
+
 % R.plot3d(q_0, ...
 %     'path', path,'alpha',0.25);
-% axis equal  
+% axis equal
 % axis manual
 % hold on
-% trplot(R.A(1:5, q_0).T, 'frame', '5', 'length', 0.05)
+% trplot(R.A(1:5, q_0).T, 'frame', '5', 'length', 0.1)
+% hold on   
+% trplot(R.A(1:4, q_0).T, 'frame', '4', 'length', 0.08)
 % hold on
-% trplot(R.A(1:4, q_0).T, 'frame', '4', 'length', 0.05)
+% trplot(R.A(1:3, q_0).T, 'frame', '3', 'length', 0.05)
+% hold on
+% trplot(R.A(1:2, q_0).T, 'frame', '2', 'length', 0.05)
+% hold on
+% trplot(R.A(1:1, q_0).T, 'frame', '1', 'length', 0.05)
+% hold on
+% trplot(R.A(1:0, q_0).T, 'frame', '0', 'length', 0.05)
 % camproj orthographic
 % campos([2 2 1.5])     % posición de la cámara
 % camtarget([0 0 0.5])  % hacia dónde mira
 % camup([0 0 1])        % eje vertical
-% 
+
 % camva(5)             % zoom
-% 
+
 % camlight headlight
 % lighting gouraud
 
-% figure;
-% R.teach(q_0,"scale",0.5)
-% input("-> Detención por plot - enter para continuar");
-% R.plot([ -4.7878   -0.0206    5.7773   -2.0058    1.0715   -6.2832], "scale", 0.5)
-% input("")
+
 
 

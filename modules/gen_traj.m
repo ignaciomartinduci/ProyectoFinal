@@ -1,4 +1,4 @@
-function q_traj = gen_traj(R, cpoints_input, q0, qdmax, qddmax, verbose, amax, vmax, wmax, alphamax)
+function q_traj = gen_traj(R, cpoints_input, q0, qdmax, qddmax, verbose, vmax, amax, wmax, alphamax)
 
 % Descripción:
 %

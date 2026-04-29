@@ -1,4 +1,4 @@
-function [] = tarea(R)
+function [] = tarea(R, cad_path)
 
 cfg = config();
 dt = cfg.traj_dt;
@@ -20,7 +20,7 @@ aux_2 =                     [0.1,  0.3,    0.22    0*d+e 180*d+e 0*d+e];
 caja_destino_superior =     [0.22,  0.3,    0.2     0*d+e 180*d+e 0*d+e];
 caja_destino_inferior =     [0.22,  0.3,    0.01    0*d+e 180*d+e 0*d+e];
 
-q_punto_medio = [1.0439    0.4714    1.0158    3.2389    1.5673   -0.5370];
+q_punto_medio = [0.5579    0.1345    1.8660    2.7257    1.5741   -1.0230];
 
 % Comienzo desde punto aleatorio
 q1 =  R.qlim(1,1) + (R.qlim(1,2)-R.qlim(1,1))*rand;
@@ -60,7 +60,7 @@ trayectoria = [
 q_traj = gen_traj(R, trayectoria, q0, qdmax, qddmax, 0, vmax, amax, wmax, alphamax);
 
 %% Visualización
-myAnimate(R,q_traj);
+myAnimate(R, q_traj, cad_path);
 
 % grafQaE(R, q_traj);
 %
