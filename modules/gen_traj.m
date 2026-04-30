@@ -1,383 +1,200 @@
-function q_traj = gen_traj(R, cpoints_input, q0, qdmax, qddmax, verbose, vmax, amax, wmax, alphamax)
+function [q_traj, dbg] = gen_traj(R, cpoints_input, q0, qdmax, qddmax, verbose, vmax, amax, wmax, alphamax)
 
-% Descripción:
-%
-%   Función definida por usuario.
-%
-%   Genera trayectorias en coordenadas articulares mediante
-%   interpolación cartesiana o articular (según se desee).
-%
-%   Perfoma cálculo de cinemática inversa según corresponda utilizando
-%   el script de cálculo algebráico inv_kinematics.m, también definido
-%   por el usuario.
-%
-%   (Pendiente) Provee robustez frente a singularidades buscando
-%   trayectorias alternativas sin saltear puntos de trayectoria
-%   cartesiana de entrada. (HECHO:) Lo mismo para puntos que no tienen respuesta
-%   y así evitar saltos grandes por acumulación de q_previo.
-%
-% Argumentos:
-%
-%   cpoints -> arreglo nx6 de puntos cartesianos a interpolar | nx7 si
-%              se especifica tipo de interpolación cartesiana/articular
-%
-%   q0      -> coordenada articular inicial
-%
-
-%% Inicialización de variables
+%% Inicialización
 
 cfg = config();
-dt = cfg.traj_dt;
+dt  = cfg.traj_dt;
 
 q_traj = [];
+dbg.q_before = [];
+dbg.q_after  = [];
 
 %% Desglose de argumentos
 
 cpoints = cpoints_input(:,1:6);
-modes = (cpoints_input(:,7));
+modes   = cpoints_input(:,7);
 
 %% Interpolaciones
 
-t_acc = max(qdmax./qddmax);
+t_acc   = max(qdmax ./ qddmax);
 idx_end = -1;
+first   = "FORCE";
 
-first = "FORCE";
+for i = 1:length(cpoints(:,1))
 
-for i=1:length(cpoints(:,1))
-
+    %% Modo articular (0)
     if modes(i) == 0 && i > idx_end
 
         idx_end = i;
-
-        if i<length(cpoints(:,1))
-            for j=i+1:length(cpoints(:,1))
-
-                if modes(j) == 1
-                    break;
-                end
-
-                if modes(j) == 0
-                    idx_end = idx_end +1;
-                end
-
+        if i < length(cpoints(:,1))
+            for j = i+1:length(cpoints(:,1))
+                if modes(j) == 1; break; end
+                if modes(j) == 0; idx_end = idx_end + 1; end
             end
         end
 
-        WP = zeros(idx_end-i+2, 6);
+        % Construcción de waypoints articulares
+        WP       = zeros(idx_end - i + 2, 6);
+        WP(1,:)  = get_q_ref(q_traj, q0);
+        q_previo = WP(1,:);
 
-        if isempty(q_traj)
-            WP(1,:) = q0;
-        else
-            WP(1,:) = q_traj(end,:);
-        end
-
-        if ~isempty(q_traj)
-            q_previo = q_traj(end,:);
-        else
-            q_previo = q0;
-        end
-
-        for j=i:idx_end
-
-            x = cpoints(j,1);
-            y = cpoints(j,2);
-            z = cpoints(j,3);
-            alpha = cpoints(j,4);
-            beta = cpoints(j,5);
-            gamma = cpoints(j,6);
-
-            if ~isempty(q_traj)
-                [~, q_mejor] = inv_kinematics(x,y,z,alpha,beta,gamma,q_previo,verbose,R, first);
-                first = "NONE";
-            else
-                [~, q_mejor] = inv_kinematics(x,y,z,alpha,beta,gamma,q0,verbose,R, first);
-                first = "NONE";
-
-            end
-
+        for j = i:idx_end
+            [~, q_mejor] = inv_kinematics(cpoints(j,1), cpoints(j,2), cpoints(j,3), ...
+                                           cpoints(j,4), cpoints(j,5), cpoints(j,6), ...
+                                           q_previo, verbose, R, first);
+            first    = "NONE";
             q_previo = q_mejor;
-
-            WP(j-i+2,:) = q_mejor;
-
+            WP(j - i + 2,:) = q_mejor;
         end
 
-        % El siguiente interpolador articular tiene
-        %   - control de velocidad articular mediante argumento qdmax
-        %   - control de aceleración articular mediente argument t_acc = qdmax/qddmax
-        %
-        q_temp = mstraj(WP(2:end,:), qdmax, [], WP(1,:), dt,t_acc');
-        scale = scale_velocities_j2c(R, q_temp, qdmax, qddmax, vmax, amax, wmax, alphamax, dt);
+        % Trayectoria inicial
+        q_before = mstraj(WP(2:end,:), qdmax, [], WP(1,:), dt, t_acc');
 
-        t_acc_scaled = t_acc*scale;
+        % Escala para cumplir límites en ambos espacios
+        scale = compute_scale(R, q_before, qdmax, qddmax, vmax, amax, wmax, alphamax, dt);
 
-        q_temp = mstraj(WP(2:end,:), qdmax, [], WP(1,:), dt,t_acc_scaled');
+        % qdmax/k alarga la duración de segmentos; t_acc*k alarga las rampas
+        % -> velocidad escala 1/k, aceleración escala 1/k² (correcto)
+        q_after = mstraj(WP(2:end,:), qdmax / scale, [], WP(1,:), dt, (t_acc * scale)');
 
-        q_traj = [q_traj; q_temp];
+        q_traj       = [q_traj;       q_after];
+        dbg.q_before = [dbg.q_before; q_before];
+        dbg.q_after  = [dbg.q_after;  q_after];
 
-    elseif modes(i)==1
+    %% Modo cartesiano (1)
+    elseif modes(i) == 1
 
         if i == 1
-
-            x_1 = cpoints(1,1);
-            y_1 = cpoints(1,2);
-            z_1 = cpoints(1,3);
-            alpha_1 = cpoints(1,4);
-            beta_1 = cpoints(1,5);
-            gamma_1 = cpoints(1,6);
-
             T_q0 = R.fkine(q0);
-            T_0 = [T_q0.n, T_q0.o, T_q0.a, T_q0.t; [0 0 0 1]];
-            T_1 = transl(x_1,y_1,z_1) * rpy2tr(alpha_1,beta_1,gamma_1);
-
-            tf = calculate_tf(T_0, T_1, vmax, amax, wmax, alphamax);
-
-            if tf > 0
-
-                t = 0:dt:tf;
-                tau = t/tf;
-
-                s = 10*tau.^3 - 15*tau.^4 + 6*tau.^5;
-
-                T_temp = ctraj(T_0, T_1, s);
-
-                scale = scale_velocities_c2j(R,T_temp, qdmax, qddmax, vmax, amax, wmax, alphamax);
-
-                if scale > 1
-
-                    tf = tf * scale;
-
-                end
-
-                t = 0:dt:tf;
-                tau = t/tf;
-
-                s = 10*tau.^3 - 15*tau.^4 + 6*tau.^5;
-
-                T_temp = ctraj(T_0, T_1, s);
-
-            else
-
-                T_temp = T_0;
-
-            end
-
+            T_0  = [T_q0.n, T_q0.o, T_q0.a, T_q0.t; 0 0 0 1];
         else
-
-            x_0 = cpoints(i-1,1);
-            y_0 = cpoints(i-1,2);
-            z_0 = cpoints(i-1,3);
-            alpha_0 = cpoints(i-1,4);
-            beta_0 = cpoints(i-1,5);
-            gamma_0 = cpoints(i-1,6);
-
-
-            x_1 = cpoints(i,1);
-            y_1 = cpoints(i,2);
-            z_1 = cpoints(i,3);
-            alpha_1 = cpoints(i,4);
-            beta_1 = cpoints(i,5);
-            gamma_1 = cpoints(i,6);
-
-            T_0 = transl(x_0,y_0,z_0) * rpy2tr(alpha_0,beta_0,gamma_0);
-            T_1 = transl(x_1,y_1,z_1) * rpy2tr(alpha_1,beta_1,gamma_1);
-
-            tf = calculate_tf(T_0, T_1, vmax, amax, wmax, alphamax);
-
-            if tf > 0
-
-                t = 0:dt:tf;
-                tau = t/tf;
-
-                s = 10*tau.^3 - 15*tau.^4 + 6*tau.^5;
-
-                T_temp = ctraj(T_0, T_1, s);
-
-                scale = scale_velocities_c2j(R,T_temp, qdmax, qddmax, vmax, amax, wmax, alphamax);
-
-                if scale > 1
-
-                    tf = tf * scale;
-
-                end
-
-                t = 0:dt:tf;
-                tau = t/tf;
-
-                s = 10*tau.^3 - 15*tau.^4 + 6*tau.^5;
-
-                T_temp = ctraj(T_0, T_1, s);
-
-            else
-
-                T_temp = T_0;
-
-            end
-
+            T_0 = transl(cpoints(i-1,1), cpoints(i-1,2), cpoints(i-1,3)) * ...
+                  rpy2tr(cpoints(i-1,4), cpoints(i-1,5), cpoints(i-1,6));
         end
 
-        for k=1:length(T_temp(1,1,:))
+        T_1 = transl(cpoints(i,1), cpoints(i,2), cpoints(i,3)) * ...
+              rpy2tr(cpoints(i,4), cpoints(i,5), cpoints(i,6));
 
-            x = T_temp(1,4,k);
-            y = T_temp(2,4,k);
-            z = T_temp(3,4,k);
+        tf = calculate_tf(T_0, T_1, vmax, amax, wmax, alphamax);
 
-            rpy = tr2rpy(T_temp(:,:,k),'zyx');
+        if tf > 0
 
-            alpha = rpy(1);
-            beta = rpy(2);
-            gamma = rpy(3);
+            q_ref = get_q_ref(q_traj, q0);
 
+            % Trayectoria cartesiana inicial -> articular
+            T_temp   = make_ctraj(T_0, T_1, tf, dt);
+            q_before = ctraj_to_jtraj(R, T_temp, q_ref, verbose, first);
+            first    = "NONE";
 
-            if ~isempty(q_traj)
-                [~, q_mejor] = inv_kinematics(x,y,z,alpha,beta,gamma,q_traj(end,:),verbose,R, first);
-                first = "NONE";
+            % Escala y regeneración si hay violaciones
+            scale = compute_scale(R, q_before, qdmax, qddmax, vmax, amax, wmax, alphamax, dt);
+
+            if scale > 1
+                tf       = tf * scale;
+                T_temp   = make_ctraj(T_0, T_1, tf, dt);
+                q_after  = ctraj_to_jtraj(R, T_temp, q_ref, verbose, "NONE");
             else
-                [~, q_mejor] = inv_kinematics(x,y,z,alpha,beta,gamma,q0,verbose,R, first);
-                first = "NONE";
+                q_after  = q_before;
             end
 
-            q_traj = [q_traj; q_mejor];
+            q_traj       = [q_traj;       q_after];
+            dbg.q_before = [dbg.q_before; q_before];
+            dbg.q_after  = [dbg.q_after;  q_after];
 
         end
 
     end
 
-
-
 end
 
 end
 
-function scale = scale_velocities_c2j(R, T, qdmax, qddmax, vmax, amax, wmax, alphamax)
+%% -- Helpers ------------------------------------------------------------------
 
-N = size(T,3);
+function q_ref = get_q_ref(q_traj, q0)
+    if isempty(q_traj); q_ref = q0; else; q_ref = q_traj(end,:); end
+end
 
-scale_qd_all  = zeros(N,6);
-scale_qdd_all = zeros(N,6);
+function T_temp = make_ctraj(T_0, T_1, tf, dt)
+    t      = 0:dt:tf;
+    tau    = t / tf;
+    s      = 10*tau.^3 - 15*tau.^4 + 6*tau.^5;
+    T_temp = ctraj(T_0, T_1, s);
+end
 
-q_previo = zeros(1,6);
-
-for i = 1:N
-
-    x_t = T(1,4,i);
-    y_t = T(2,4,i);
-    z_t = T(3,4,i);
-
-    rpy = tr2rpy(T(:,:,i),'zyx');
-    alpha = rpy(1);
-    beta  = rpy(2);
-    gamma = rpy(3);
-
-    [~, q_i] = inv_kinematics(x_t, y_t, z_t, alpha, beta, gamma, q_previo, false, R);
-    q_previo = q_i;
-
-
-    J = R.jacob0(q_i);
-    Jinv = pinv(J);
-
-
-    for j = 1:6 % Analizo la saturación de movimiento de cada articulación
-
-        Jv_row = Jinv(j,1:3);
-        Jw_row = Jinv(j,4:6);
-
-        nv = norm(Jv_row);
-        nw = norm(Jw_row);
-
-        scale_qd_all(i,j) = sqrt( (nv * vmax)^2 + (nw * wmax)^2 )*0.5 / qdmax(j);
-        scale_qdd_all(i,j) = sqrt( (nv * amax)^2 + (nw * alphamax)^2 )*0.5 / qddmax(j);
+function qtraj = ctraj_to_jtraj(R, T_temp, q_ref, verbose, first)
+    N        = size(T_temp, 3);
+    qtraj    = zeros(N, 6);
+    q_previo = q_ref;
+    for k = 1:N
+        rpy = tr2rpy(T_temp(:,:,k), 'zyx');
+        [~, q_mejor] = inv_kinematics(T_temp(1,4,k), T_temp(2,4,k), T_temp(3,4,k), ...
+                                       rpy(1), rpy(2), rpy(3), q_previo, verbose, R, first);
+        first      = "NONE";
+        q_previo   = q_mejor;
+        qtraj(k,:) = q_mejor;
     end
-
 end
 
-scale_qd  = max(scale_qd_all,  [], 'all');
-scale_qdd = max(scale_qdd_all, [], 'all');
+%% -- Cómputo de escala requerida ---------------------------------------------
 
-scale = max([1, scale_qd, scale_qdd]);
-scale = 1;
+function scale = compute_scale(R, qtraj, qdmax, qddmax, vmax, amax, wmax, alphamax, dt)
+% Retorna k >= 1 tal que la trayectoria re-escalada cumple todos los limites.
+% Al estirar el tiempo por k: velocidades escalan 1/k, aceleraciones 1/k^2.
 
-end
+N = size(qtraj, 1);
 
-function tf = calculate_tf(T_0, T_1, vmax, amax, wmax, alphamax)
-
-cfg = config();
-
-p_0 = T_0(1:3,4);
-p_1 = T_1(1:3,4);
-
-d = norm(p_1-p_0);
-
-if d < 10^-4
-
-    %disp("d pequeño");
-
-    tf = -1;
-    return
-
-end
-
-[theta, ~] = tr2angvec(T_0 \ T_1);
-
-tf_v = (cfg.s_dot_max * d)/(vmax); % Tiempo de velocidad lineal, evito sobrepasar vmax
-tf_a = sqrt((cfg.s_ddot_max * d) / amax); % Tiempo de aceleración lineal, evito sobrepasar amax
-tf_w = (cfg.s_dot_max * theta) / wmax; % Tiempo de velocidad angular, evito sobrepasar wmax
-tf_alpha = sqrt((cfg.s_ddot_max * theta) / alphamax); % Tiempo de aceleración angular, evito sobrepasar alphamax
-
-tf = max([tf_v, tf_a, tf_w, tf_alpha]); % Elección del peor caso, evita sobrepasar ambos
-
-end
-
-function scale = scale_velocities_j2c(R, qtraj, qdmax, qddmax, vmax, amax, wmax, alphamax, dt)
-
-N = length(qtraj(:,1));
-fs = 1.25;
-scale_v_all  = zeros(N,6);
-scale_w_all  = zeros(N,6);
-scale_a_all  = zeros(N,6);
-scale_alpha_all = zeros(N,6);
-
-qdtraj  = zeros(size(qtraj));
-qddtraj = zeros(size(qtraj));
-
+qdtraj  = zeros(N, 6);
+qddtraj = zeros(N, 6);
 for j = 1:6
     qdtraj(:,j)  = gradient(qtraj(:,j),  dt);
     qddtraj(:,j) = gradient(qdtraj(:,j), dt);
 end
 
-qddmax_traj = max(abs(qddtraj));
+% Espacio articular
+k_qd  = max(max(abs(qdtraj),  [], 1) ./ qdmax);
+k_qdd = sqrt(max(max(abs(qddtraj), [], 1) ./ qddmax));
 
-scale = max((qddmax_traj./qddmax)*fs);
+% Espacio cartesiano: velocidad y aceleración reales via Jacobiano
+v_lin = zeros(N,1); v_ang = zeros(N,1);
+a_lin = zeros(N,1); a_ang = zeros(N,1);
 
-for i=1:N
-
-    J = R.jacob0(qtraj(i,:));
-
-    for j=1:6
-
-        Jv_row = J(1:3,j);
-        Jw_row = J(4:6,j);
-
-        nv = norm(Jv_row);
-        nw = norm(Jw_row);
-
-        scale_v_all(i,j) = (nv * qdmax(j)) / vmax;
-        scale_w_all(i,j) = (nw * qdmax(j)) / wmax;
-        scale_a_all(i,j)     = (nv * qddmax(j)) / amax;
-        scale_alpha_all(i,j) = (nw * qddmax(j)) / alphamax;
-
-    end
+for i = 1:N
+    J  = R.jacob0(qtraj(i,:));
+    cv = J * qdtraj(i,:)';
+    ca = J * qddtraj(i,:)';
+    v_lin(i) = norm(cv(1:3));
+    v_ang(i) = norm(cv(4:6));
+    a_lin(i) = norm(ca(1:3));
+    a_ang(i) = norm(ca(4:6));
 end
 
-scale_v     = max(scale_v_all,     [], 'all');
-scale_w     = max(scale_w_all,     [], 'all');
-scale_a     = max(scale_a_all,     [], 'all');
-scale_alpha = max(scale_alpha_all, [], 'all');
+k_v     = max(v_lin) / vmax;
+k_w     = max(v_ang) / wmax;
+k_a     = sqrt(max(a_lin) / amax);
+k_alpha = sqrt(max(a_ang) / alphamax);
 
-scale_2 = max([1, scale_v, scale_w, scale_a, scale_alpha]);
-
-scale = max([scale,scale_2]);
-
+scale = max([1, k_qd, k_qdd, k_v, k_w, k_a, k_alpha]);
 end
 
+%% -- Tiempo mínimo para trayectoria cartesiana --------------------------------
 
+function tf = calculate_tf(T_0, T_1, vmax, amax, wmax, alphamax)
 
+cfg = config();
+d   = norm(T_1(1:3,4) - T_0(1:3,4));
+
+if d < 1e-4
+    tf = -1;
+    return
+end
+
+[theta, ~] = tr2angvec(T_0 \ T_1);
+
+tf_v     =      (cfg.s_dot_max  * d)     / vmax;
+tf_a     = sqrt((cfg.s_ddot_max * d)     / amax);
+tf_w     =      (cfg.s_dot_max  * theta) / wmax;
+tf_alpha = sqrt((cfg.s_ddot_max * theta) / alphamax);
+
+tf = max([tf_v, tf_a, tf_w, tf_alpha]);
+end

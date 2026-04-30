@@ -51,7 +51,7 @@ q_0 = [15,20,-15,20,45,5]*pi/180;
 q_0 = [-pi/5 -pi/5 -pi/5 -pi/5 -pi/5 -pi/5];
 q_0 = [0 0 0 0 0 0];
 
-% path = [pwd, '/models/CAD'];
+% path = [pwd, '/models/CAD2'];
 
 % R.plot3d(q_0, ...
 %     'path', path,'alpha',0.25);

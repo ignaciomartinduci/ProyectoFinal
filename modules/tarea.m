@@ -57,20 +57,22 @@ trayectoria = [
     punto_medio 0
     ];
 
-q_traj = gen_traj(R, trayectoria, q0, qdmax, qddmax, 0, vmax, amax, wmax, alphamax);
+[q_traj, dbg] = gen_traj(R, trayectoria, q0, qdmax, qddmax, 0, vmax, amax, wmax, alphamax);
 
 %% Visualización
 myAnimate(R, q_traj, cad_path);
 
-% grafQaE(R, q_traj);
-%
-% qd_traj  = zeros(size(q_traj));
-% qdd_traj = zeros(size(q_traj));
-% for j = 1:size(q_traj,2)
-%     qd_traj(:,j)  = gradient(q_traj(:,j), dt);
-%     qdd_traj(:,j) = gradient(qd_traj(:,j), dt);
+grafQaE(R, q_traj);
 
-% grafQ(q_traj,qd_traj,qdd_traj);
+qd_traj  = zeros(size(q_traj));
+qdd_traj = zeros(size(q_traj));
+for j = 1:size(q_traj,2)
+    qd_traj(:,j)  = gradient(q_traj(:,j),  dt);
+    qdd_traj(:,j) = gradient(qd_traj(:,j), dt);
+end
 
+grafQ(q_traj, qd_traj, qdd_traj);
+
+grafScaling(R, dbg, qdmax, vmax, amax, wmax, alphamax);
 
 end

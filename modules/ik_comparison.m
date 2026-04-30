@@ -68,7 +68,7 @@ for combo = 0:7
             q_cand(j) = q_alt(j);
         end
     end
-
+    
     if all(q_cand >= R.qlim(:,1)' & q_cand <= R.qlim(:,2)')
         solutions(end+1, :) = q_cand;           %#ok<AGROW>
         sol_labels{end+1}   = make_label(q_cand, q_geo, bits);  %#ok<AGROW>
@@ -89,7 +89,7 @@ warn_frac = 0.10;
 bar_h     = 0.65;
 
 fig = figure('Name', 'IK Comparison — Periodicidad Articular', ...
-             'Color', [0.96 0.96 0.96], 'NumberTitle', 'off');
+    'Color', [0.96 0.96 0.96], 'NumberTitle', 'off');
 
 % Eje invisible para el título dinámico (arriba del robot)
 ax_title  = axes(fig, 'Position', [0.16 0.93 0.82 0.06], 'Visible', 'off');
@@ -123,7 +123,7 @@ for j = 1:n_joints
     ylo = j - bar_h/2;
     yhi = j + bar_h/2;
     q_n = joint_norm(solutions(1,j), qlim(j,:));
-
+    
     % Zonas de advertencia en los extremos del rango
     patch(ax_joints, [0 warn_frac warn_frac 0],             [ylo ylo yhi yhi], [1.0 0.80 0.80], 'EdgeColor','none');
     patch(ax_joints, [1-warn_frac 1 1 1-warn_frac],         [ylo ylo yhi yhi], [1.0 0.80 0.80], 'EdgeColor','none');
@@ -155,11 +155,11 @@ lighting gouraud;
 
 %% 7. Loop principal: animar y esperar al usuario en cada solución
 for k = 1:n_sol
-
+    
     btn_travel(btn);
     set(h_title, 'String', sprintf('Viajando a solución %d / %d...', k, n_sol));
     drawnow;
-
+    
     if k == 1
         % Primera posición: robot ya está ahí desde el setup
         R.animate(solutions(1,:));
@@ -175,13 +175,13 @@ for k = 1:n_sol
             pause(cfg.anim_dt);
         end
     end
-
+    
     % Asegurar posición exacta final y actualizar título
     R.animate(solutions(k,:));
     update_joints(hJMarkers, solutions(k,:), qlim, warn_frac);
     set(h_title, 'String', sprintf('Solución %d / %d  —  %s', k, n_sol, sol_labels{k}));
     drawnow;
-
+    
     % Habilitar botón o finalizar
     if k < n_sol
         btn_ready(btn);
@@ -191,7 +191,7 @@ for k = 1:n_sol
     else
         btn_end(btn);
     end
-
+    
 end
 
 end
@@ -201,52 +201,54 @@ end
 %% =====================================================================
 
 function btn_ready(btn)
-    set(btn, 'Enable','on',  'String','CONTINUAR  →', ...
-        'BackgroundColor',[0.20 0.72 0.20], 'ForegroundColor','w');
+set(btn, 'Enable','on',  'String','CONTINUAR  →', ...
+    'BackgroundColor',[0.20 0.72 0.20], 'ForegroundColor','w');
 end
 
 function btn_travel(btn)
-    set(btn, 'Enable','off', 'String','Viajando...', ...
-        'BackgroundColor',[0.74 0.74 0.74], 'ForegroundColor',[0.40 0.40 0.40]);
+set(btn, 'Enable','off', 'String','Viajando...', ...
+    'BackgroundColor',[0.74 0.74 0.74], 'ForegroundColor',[0.40 0.40 0.40]);
 end
 
 function btn_end(btn)
-    set(btn, 'Enable','off', 'String','FIN', ...
-        'BackgroundColor',[0.30 0.45 0.85], 'ForegroundColor','w');
+set(btn, 'Enable','off', 'String','FIN', ...
+    'BackgroundColor',[0.30 0.45 0.85], 'ForegroundColor','w');
 end
 
 function update_joints(hMarkers, q, qlim, warn_frac)
-    for j = 1:length(q)
-        q_n = joint_norm(q(j), qlim(j,:));
-        set(hMarkers(j), 'XData', [q_n q_n], 'Color', bar_color(limit_t(q_n, warn_frac)));
-    end
+for j = 1:length(q)
+    q_n = joint_norm(q(j), qlim(j,:));
+    set(hMarkers(j), 'XData', [q_n q_n], 'Color', bar_color(limit_t(q_n, warn_frac)));
+end
 end
 
 % Label para el título: indica si cada joint usa el valor base o la variante ±360°
 function label = make_label(q_cand, q_geo, bits)
-    names = {'q1', 'q2', 'q3'};
-    parts = cell(1, 3);
-    for j = 1:3
-        val_deg = round(q_cand(j) * 180/pi);
-        if bits(j) == 0
-            parts{j} = sprintf('%s: %d° (base)', names{j}, val_deg);
-        elseif q_cand(j) > q_geo(j)
-            parts{j} = sprintf('%s: %d° (+360°)', names{j}, val_deg);
-        else
-            parts{j} = sprintf('%s: %d° (-360°)', names{j}, val_deg);
-        end
+names = {'q1', 'q2', 'q3'};
+parts = cell(1, 3);
+for j = 1:3
+    val_deg = round(q_cand(j) * 180/pi);
+    base_deg = round(q_geo(j) * 180/pi);
+    if bits(j) == 0
+        parts{j} = sprintf('%s: %d° (base)', names{j}, val_deg);
+    elseif q_cand(j) > q_geo(j)
+        parts{j} = sprintf('%s: %d°  (%d°+360°)', names{j}, val_deg, base_deg);
+    else
+        parts{j} = sprintf('%s: %d°  (%d°-360°)', names{j}, val_deg, base_deg);
     end
-    label = strjoin(parts, '    ');
+end
+label = strjoin(parts, '    ');
 end
 
 function n = joint_norm(q, lim)
-    n = max(0, min(1, (q - lim(1)) / (lim(2) - lim(1))));
+n = max(0, min(1, (q - lim(1)) / (lim(2) - lim(1))));
 end
 
 function t = limit_t(q_norm, warn_frac)
-    t = max(0, min(1, 1 - min(q_norm, 1 - q_norm) / warn_frac));
+t = max(0, min(1, 1 - min(q_norm, 1 - q_norm) / warn_frac));
 end
 
 function c = bar_color(t)
-    c = [t, 1-t, 0];
+s = sqrt(t);
+c = [s, 1-s, 0];
 end

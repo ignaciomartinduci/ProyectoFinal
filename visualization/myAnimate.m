@@ -17,9 +17,9 @@ for i = 1:N
     smin_vals(i) = min(sv);
 end
 
-cond_lo     = max(1, min(cond_vals));
-cond_hi     = max(cond_vals) * 1.5;
-sing_thresh = cond_hi / 3;
+cond_lo     = 1;
+cond_hi     = max(max(cond_vals) * 1.5, 1000);
+sing_thresh = 100;
 
 n_joints  = R.n;
 qlim      = R.qlim;           % n×2: [q_min, q_max]
@@ -56,23 +56,23 @@ for j = 1:n_joints
     ylo    = yc - bar_h/2;
     yhi    = yc + bar_h/2;
     q_norm = joint_norm(q_sub(1,j), qlim(j,:));
-
+    
     % Zona de advertencia: extremo izquierdo (cerca del mínimo)
     patch(ax_joints, [0 warn_frac warn_frac 0], [ylo ylo yhi yhi], ...
         [1 0.80 0.80], 'EdgeColor', 'none');
-
+    
     % Zona de advertencia: extremo derecho (cerca del máximo)
     patch(ax_joints, [1-warn_frac 1 1 1-warn_frac], [ylo ylo yhi yhi], ...
         [1 0.80 0.80], 'EdgeColor', 'none');
-
+    
     % Track de fondo
     patch(ax_joints, [0 1 1 0], [ylo ylo yhi yhi], ...
         [0.82 0.82 0.82], 'EdgeColor', [0.55 0.55 0.55], 'LineWidth', 0.5);
-
+    
     % Línea central de referencia (posición media del rango)
     plot(ax_joints, [0.5 0.5], [ylo yhi], '--', ...
         'Color', [0.65 0.65 0.65], 'LineWidth', 0.8);
-
+    
     % Marcador de posición actual
     t0 = limit_t(q_norm, warn_frac);
     hJMarkers(j) = plot(ax_joints, [q_norm q_norm], [ylo yhi], '-', ...
@@ -126,29 +126,29 @@ hWarn = text(ax_bar, 0.5, 0.65, '! SINGULAR', 'Units', 'normalized', ...
 % =========================================================
 for i = 1:N
     R.animate(q_sub(i,:));
-
+    
     % -- Articulaciones --
     for j = 1:n_joints
         q_norm = joint_norm(q_sub(i,j), qlim(j,:));
         t      = limit_t(q_norm, warn_frac);
         set(hJMarkers(j), 'XData', [q_norm q_norm], 'Color', bar_color(t));
     end
-
+    
     % -- Jacobiano --
     cval = cond_vals(i);
     smin = smin_vals(i);
     t    = bar_t(cval, cond_lo, cond_hi);
-
+    
     set(hBar,  'YData', [cond_lo cond_lo cval cval], 'FaceColor', bar_color(t));
     set(hLine, 'YData', [cval cval]);
     set(hInfo, 'String', sprintf('cond: %.0f\nsmin: %.4f', cval, smin));
-
+    
     if cval > sing_thresh
         set(hWarn, 'Visible', 'on');
     else
         set(hWarn, 'Visible', 'off');
     end
-
+    
     drawnow;
     pause(cfg.anim_dt);
 end
@@ -157,21 +157,21 @@ end
 
 % Normaliza q al rango [0,1] según los límites articulares
 function n = joint_norm(q, lim)
-    n = (q - lim(1)) / (lim(2) - lim(1));
-    n = max(0, min(1, n));
+n = (q - lim(1)) / (lim(2) - lim(1));
+n = max(0, min(1, n));
 end
 
 % t en [0,1]: 0 = lejos del límite (verde), 1 = en el límite (rojo)
 function t = limit_t(q_norm, warn_frac)
-    margin = min(q_norm, 1 - q_norm);
-    t = max(0, min(1, 1 - margin / warn_frac));
+margin = min(q_norm, 1 - q_norm);
+t = max(0, min(1, 1 - margin / warn_frac));
 end
 
 % t en [0,1]: 0 = bien condicionado (verde), 1 = singular (rojo)
 function t = bar_t(cval, cond_lo, cond_hi)
-    t = min((log10(max(cval, cond_lo)) - log10(cond_lo)) / (log10(cond_hi) - log10(cond_lo)), 1);
+t = min((log10(max(cval, cond_lo)) - log10(cond_lo)) / (log10(cond_hi) - log10(cond_lo)), 1);
 end
 
 function c = bar_color(t)
-    c = [t, 1-t, 0];
+c = [t, 1-t, 0];
 end

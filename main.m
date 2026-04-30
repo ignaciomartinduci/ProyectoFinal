@@ -24,25 +24,25 @@ end
 disp("== INICIANDO PROGRAMA ==");
 
 if TEST_WORKSPACE
-
+    
     test_workspace(R);
-
+    
 end
 
 if TEST_INV_KINEMATICS
-
+    
     test_inv_kinematics(R, TEST_LOOP_IK, PRINT_SOLUTIONS);
-
+    
 end
 
 if SINGULARITIES
-
+    
     test_singularities(R);
-
+    
 end
 
 if TEST_GEN_TRAJ
-
+    
     test_gen_traj(R, cad_path);
 end
 

@@ -15,19 +15,19 @@ idx = 0;
 
 
 for i = 1:numel(q1)
-
+    
     idx = idx + 1;
-
+    
     q = [q1(i) q2 q3 q4 q5 q6];
-
+    
     T = R.fkine(q);
     p = T.t;
-
+    
     x = p(1);
     y = p(2);
-
+    
     puntos_alcanzados(idx,:) = [x y];
-
+    
 end
 
 figure;

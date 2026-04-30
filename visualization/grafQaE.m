@@ -18,19 +18,19 @@ yaw   = zeros(N,1);
 
 %% --- CINEMÁTICA DIRECTA ---
 for i = 1:N
-
+    
     T(:,:,i) = R.fkine(q_traj(i,:));
-
+    
     x(i) = T(1,4,i);
     y(i) = T(2,4,i);
     z(i) = T(3,4,i);
-
+    
     rpy = tr2rpy(T(:,:,i),'zyx');
-
+    
     roll(i)  = rpy(1);
     pitch(i) = rpy(2);
     yaw(i)   = rpy(3);
-
+    
 end
 
 %% --- DERIVADAS NUMÉRICAS ---

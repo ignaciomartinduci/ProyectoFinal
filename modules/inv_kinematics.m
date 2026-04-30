@@ -162,7 +162,7 @@ if isreal(A) && isreal(B)
     q_611 = atan2(A,B);
     q_611 = mod(q_611-qlim_6_inf, qlim_6_sup-qlim_6_inf) + qlim_6_inf;
     q_612 = mod(q_611-qlim_6_inf+pi, qlim_6_sup-qlim_6_inf) + qlim_6_inf;
-
+    
 else
     s1_valid = 0;
     s2_valid = 0;
@@ -177,7 +177,7 @@ if isreal(A) && isreal(B)
     q_621 = atan2(A,B);
     q_621 = mod(q_621-qlim_6_inf, qlim_6_sup-qlim_6_inf) + qlim_6_inf;
     q_622 = mod(q_621-qlim_6_inf+pi, qlim_6_sup-qlim_6_inf) + qlim_6_inf;
-
+    
 else
     s5_valid = 0;
     s6_valid = 0;
@@ -278,17 +278,17 @@ if s1_valid && s2_valid
         s1_valid = 0;
         s2_valid = 0;
     end
-
+    
     a = -d_5*A+z-d_1;
     b = d_5*B-x*cos(q_11)-y*sin(q_11);
-
+    
     C = a_2^2+a^2+b^2-a_3^2;
     D = 2*a_2*b;
     E = -2*a_2*a;
-
+    
     t_21 = (-2*D+sqrt(4*D^2-4*(C-E)*(C+E)))/(2*(C-E));
     t_22 = (-2*D-sqrt(4*D^2-4*(C-E)*(C+E)))/(2*(C-E));
-
+    
     q_21 = 2*atan(t_21);
     q_22 = 2*atan(t_22);
 end
@@ -296,7 +296,7 @@ end
 % sol 3 - 4
 
 if s3_valid && s4_valid
-
+    
     A = (r_13*cos(q_11)+r_23*sin(q_11))/(-sin(q_512));
     try
         B = -r_33/-sin(q_512);
@@ -304,17 +304,17 @@ if s3_valid && s4_valid
         s3_valid = 0;
         s4_valid = 0;
     end
-
+    
     a = -d_5*A+z-d_1;
     b = d_5*B-x*cos(q_11)-y*sin(q_11);
-
+    
     C = a_2^2+a^2+b^2-a_3^2;
     D = 2*a_2*b;
     E = -2*a_2*a;
-
+    
     t_23 = (-2*D+sqrt(4*D^2-4*(C-E)*(C+E)))/(2*(C-E));
     t_24 = (-2*D-sqrt(4*D^2-4*(C-E)*(C+E)))/(2*(C-E));
-
+    
     q_23 = 2*atan(t_23);
     q_24 = 2*atan(t_24);
 end
@@ -322,7 +322,7 @@ end
 % sol 5 - 6
 
 if s5_valid && s6_valid
-
+    
     A = (r_13*cos(q_12)+r_23*sin(q_12))/(-sin(q_521));
     try
         B = -r_33/-sin(q_521);
@@ -330,17 +330,17 @@ if s5_valid && s6_valid
         s5_valid = 0;
         s6_valid = 0;
     end
-
+    
     a = -d_5*A+z-d_1;
     b = d_5*B-x*cos(q_12)-y*sin(q_12);
-
+    
     C = a_2^2+a^2+b^2-a_3^2;
     D = 2*a_2*b;
     E = -2*a_2*a;
-
+    
     t_25 = (-2*D+sqrt(4*D^2-4*(C-E)*(C+E)))/(2*(C-E));
     t_26 = (-2*D-sqrt(4*D^2-4*(C-E)*(C+E)))/(2*(C-E));
-
+    
     q_25 = 2*atan(t_25);
     q_26 = 2*atan(t_26);
 end
@@ -348,7 +348,7 @@ end
 % sol 7 - 8
 
 if s7_valid && s8_valid
-
+    
     A = (r_13*cos(q_12)+r_23*sin(q_12))/(-sin(q_522));
     try
         B = -r_33/-sin(q_522);
@@ -356,20 +356,20 @@ if s7_valid && s8_valid
         s7_valid = 0;
         s8_valid = 0;
     end
-
+    
     a = -d_5*A+z-d_1;
     b = d_5*B-x*cos(q_12)-y*sin(q_12);
-
+    
     C = a_2^2+a^2+b^2-a_3^2;
     D = 2*a_2*b;
     E = -2*a_2*a;
-
+    
     t_27 = (-2*D+sqrt(4*D^2-4*(C-E)*(C+E)))/(2*(C-E));
     t_28 = (-2*D-sqrt(4*D^2-4*(C-E)*(C+E)))/(2*(C-E));
-
+    
     q_27 = 2*atan(t_27);
     q_28 = 2*atan(t_28);
-
+    
 end
 
 if ~isreal(q_21)
@@ -420,145 +420,145 @@ end
 % sol 1 - 2
 
 if s1_valid
-
+    
     A = (r_13*cos(q_11)+r_23*sin(q_11))/(-sin(q_511));
     B = -r_33/-sin(q_511);
-
+    
     a = -d_5*A+z-d_1;
     b = d_5*B-x*cos(q_11)-y*sin(q_11);
-
+    
     num = -a_2*sin(q_21)-b;
     den = -a_2*cos(q_21)+a;
-
+    
     q23 = atan2(num,den);
-
+    
     q_31 = q23 - q_21;
-
+    
 end
 
 if s2_valid
-
+    
     A = (r_13*cos(q_11)+r_23*sin(q_11))/(-sin(q_511));
     B = -r_33/-sin(q_511);
-
+    
     a = -d_5*A+z-d_1;
     b = d_5*B-x*cos(q_11)-y*sin(q_11);
-
+    
     num = -a_2*sin(q_22)-b;
     den = -a_2*cos(q_22)+a;
-
+    
     q23 = atan2(num,den);
-
+    
     q_32 = q23 - q_22;
-
+    
 end
 
 % sol 3 - 4
 
 if s3_valid
-
+    
     A = (r_13*cos(q_11)+r_23*sin(q_11))/(-sin(q_512));
     B = -r_33/-sin(q_512);
-
+    
     a = -d_5*A+z-d_1;
     b = d_5*B-x*cos(q_11)-y*sin(q_11);
-
+    
     num = -a_2*sin(q_23)-b;
     den = -a_2*cos(q_23)+a;
-
+    
     q23 = atan2(num,den);
-
+    
     q_33 = q23 - q_23;
-
+    
 end
 
 if s4_valid
-
+    
     A = (r_13*cos(q_11)+r_23*sin(q_11))/(-sin(q_512));
     B = -r_33/-sin(q_512);
-
+    
     a = -d_5*A+z-d_1;
     b = d_5*B-x*cos(q_11)-y*sin(q_11);
-
+    
     num = -a_2*sin(q_24)-b;
     den = -a_2*cos(q_24)+a;
-
+    
     q23 = atan2(num,den);
-
+    
     q_34 = q23 - q_24;
-
+    
 end
 
 % sol 5 - 6
 
 if s5_valid
-
+    
     A = (r_13*cos(q_12)+r_23*sin(q_12))/(-sin(q_521));
     B = -r_33/-sin(q_521);
-
+    
     a = -d_5*A+z-d_1;
     b = d_5*B-x*cos(q_12)-y*sin(q_12);
-
+    
     num = -a_2*sin(q_25)-b;
     den = -a_2*cos(q_25)+a;
-
+    
     q23 = atan2(num,den);
-
+    
     q_35 = q23 - q_25;
-
+    
 end
 
 if s6_valid
-
+    
     A = (r_13*cos(q_12)+r_23*sin(q_12))/(-sin(q_521));
     B = -r_33/-sin(q_521);
-
+    
     a = -d_5*A+z-d_1;
     b = d_5*B-x*cos(q_12)-y*sin(q_12);
-
+    
     num = -a_2*sin(q_26)-b;
     den = -a_2*cos(q_26)+a;
-
+    
     q23 = atan2(num,den);
-
+    
     q_36 = q23 - q_26;
-
+    
 end
 
 % sol 7 - 8
 
 if s7_valid
-
+    
     A = (r_13*cos(q_12)+r_23*sin(q_12))/(-sin(q_522));
     B = -r_33/-sin(q_522);
-
+    
     a = -d_5*A+z-d_1;
     b = d_5*B-x*cos(q_12)-y*sin(q_12);
-
+    
     num = -a_2*sin(q_27)-b;
     den = -a_2*cos(q_27)+a;
-
+    
     q23 = atan2(num,den);
-
+    
     q_37 = q23 - q_27;
-
+    
 end
 
 if s8_valid
-
+    
     A = (r_13*cos(q_12)+r_23*sin(q_12))/(-sin(q_522));
     B = -r_33/-sin(q_522);
-
+    
     a = -d_5*A+z-d_1;
     b = d_5*B-x*cos(q_12)-y*sin(q_12);
-
+    
     num = -a_2*sin(q_28)-b;
     den = -a_2*cos(q_28)+a;
-
+    
     q23 = atan2(num,den);
-
+    
     q_38 = q23 - q_28;
-
+    
 end
 
 q_31 = mod(q_31-qlim_3_inf, qlim_3_sup-qlim_3_inf) + qlim_3_inf;
@@ -721,7 +721,7 @@ if s8_valid
 end
 
 if verbose && isempty(all_sol)
-
+    
     disp("No se encontraron soluciones para la IK.")
 end
 
@@ -729,55 +729,55 @@ end
 %% Amplicación de soluciones por periodicidad
 
 if ~isempty(all_sol)
-
+    
     ampl_all_sol = zeros(length(all_sol(:,1)*64),6);
     idx_max = length(all_sol(:,1));
     comb = dec2bin(0:63) - '0';
-
+    
     for i=1:idx_max
-
+        
         q_aux = [0 0 0 0 0 0];
-
+        
         for j=1:6
-
+            
             if all_sol(i,j) > 0
                 q_aux(j) = all_sol(i,j) -2*pi;
             else
                 q_aux(j) = all_sol(i,j) +2*pi;
             end
-
+            
         end
-
+        
         for k=1:64
-
+            
             for l=1:6
-
+                
                 if comb(k,l) == 0
-
+                    
                     ampl_all_sol(k+64*(i-1), l) = all_sol(i,l);
                 else
-
+                    
                     ampl_all_sol(k+64*(i-1), l) = q_aux(l);
-
+                    
                 end
             end
-
+            
         end
-
-
+        
+        
     end
-
+    
 end
 
 
 %% Cálculo de mejor solución
 
 if ~isempty(all_sol)
-
+    
     q_mejor = costo_simple(q_previo, ampl_all_sol, all_sol, pose_config);
-
+    
 else
-
+    
     q_mejor = q_previo;
     ampl_all_sol = q_previo;
 end
@@ -819,33 +819,33 @@ costo_mejor = inf;
 
 
 if pose_config == "FORCE"
-
+    
     for  i = 1:size(all_sol,1)
-
+        
         dq = wrapToPi(all_sol(i,:) - q_previo);
-
+        
         costo_nuevo = sum(abs(dq));
-
+        
         if costo_nuevo < costo_mejor
             q_mejor = q_previo + dq;
             costo_mejor = costo_nuevo;
         end
-
+        
     end
-
+    
 else
-
+    
     for  i = 1:size(ampl_all_sol,1)
-
+        
         dq = wrapToPi(ampl_all_sol(i,:) - q_previo);
-
+        
         costo_nuevo = sum(abs(dq));
-
+        
         if costo_nuevo < costo_mejor
             q_mejor = q_previo + dq;
             costo_mejor = costo_nuevo;
         end
-
+        
     end
 end
 

@@ -24,7 +24,7 @@ q0 = [1.3913    0.5478    1.0215    3.1548    1.5629   -0.1896];
 qdmax = [180 180 180 360 360 360]*d;
 qddmax = [800 800 800 800 800 800]*d;
 
-q_traj = gen_traj(R, cpoints_modes, q0, qdmax, qddmax, 0, vmax, amax, wmax, alphamax);
+[q_traj, dbg] = gen_traj(R, cpoints_modes, q0, qdmax, qddmax, 0, vmax, amax, wmax, alphamax);
 
 
 
@@ -42,5 +42,7 @@ for j = 1:size(q_traj,2)
 end
 
 grafQ(q_traj,qd_traj,qdd_traj)
+
+grafScaling(R, dbg, qdmax, vmax, amax, wmax, alphamax)
 
 end
