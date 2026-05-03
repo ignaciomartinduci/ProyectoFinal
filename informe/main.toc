@@ -1,0 +1,53 @@
+\babel@toc {spanish}{}\relax 
+\contentsline {section}{\numberline {1}Introducción}{6}{section.1}%
+\contentsline {subsection}{\numberline {1.1}Motivación y mercado}{6}{subsection.1.1}%
+\contentsline {subsection}{\numberline {1.2}Propuesta}{6}{subsection.1.2}%
+\contentsline {section}{\numberline {2}Objetivos y beneficiarios}{9}{section.2}%
+\contentsline {section}{\numberline {3}Descripción de la tarea y especificaciones del robot}{11}{section.3}%
+\contentsline {section}{\numberline {4}Diseño conceptual preliminar}{13}{section.4}%
+\contentsline {section}{\numberline {5}Modelado cinemático}{15}{section.5}%
+\contentsline {subsection}{\numberline {5.1}Modelado cinemático}{15}{subsection.5.1}%
+\contentsline {subsection}{\numberline {5.2}Análisis y verificación de espacio de trabajo }{17}{subsection.5.2}%
+\contentsline {subsection}{\numberline {5.3}Cinemática inversa}{17}{subsection.5.3}%
+\contentsline {subsection}{\numberline {5.4}Análisis de singularidades}{24}{subsection.5.4}%
+\contentsline {section}{\numberline {6}Planificación de trayectorias}{26}{section.6}%
+\contentsline {subsection}{\numberline {6.1}Generación de trayectorias}{26}{subsection.6.1}%
+\contentsline {subsection}{\numberline {6.2}Escalamiento de velocidades y aceleraciones}{26}{subsection.6.2}%
+\contentsline {section}{\numberline {7}Diseño y adaptación de CAD}{28}{section.7}%
+\contentsline {subsection}{\numberline {7.1}Visualización del modelo en MATLAB}{28}{subsection.7.1}%
+\contentsline {subsection}{\numberline {7.2}Diseño de piezas en \textit {Fusion 360}}{28}{subsection.7.2}%
+\contentsline {subsubsection}{\numberline {7.2.1}Base}{29}{subsubsection.7.2.1}%
+\contentsline {subsubsection}{\numberline {7.2.2}Eslabón 1}{29}{subsubsection.7.2.2}%
+\contentsline {subsubsection}{\numberline {7.2.3}Eslabón 2}{30}{subsubsection.7.2.3}%
+\contentsline {subsubsection}{\numberline {7.2.4}Eslabón 3}{30}{subsubsection.7.2.4}%
+\contentsline {subsubsection}{\numberline {7.2.5}Eslabón 4}{30}{subsubsection.7.2.5}%
+\contentsline {subsubsection}{\numberline {7.2.6}Eslabón 5}{31}{subsubsection.7.2.6}%
+\contentsline {subsubsection}{\numberline {7.2.7}Eslabón 6 -- Herramienta}{31}{subsubsection.7.2.7}%
+\contentsline {subsection}{\numberline {7.3}Diseño alternativo: apertura unidireccional de eslabones}{32}{subsection.7.3}%
+\contentsline {section}{\numberline {8}Simulación y verificación de tarea}{34}{section.8}%
+\contentsline {section}{\numberline {9}Integración en entorno ROS2}{35}{section.9}%
+\contentsline {section}{\numberline {A}Verificación y Validación de Módulos de Software de MATLAB}{36}{section.1.A}%
+\contentsline {subsection}{\numberline {A.1}Cinemática Inversa}{36}{subsection.1.A.1}%
+\contentsline {subsection}{\numberline {A.2}Singularidades}{37}{subsection.1.A.2}%
+\contentsline {subsection}{\numberline {A.3}Generación de trayectorias}{37}{subsection.1.A.3}%
+\contentsline {subsection}{\numberline {A.4}Nombre del Módulo 1}{38}{subsection.1.A.4}%
+\contentsline {subsection}{\numberline {A.5}Nombre del Módulo 1}{38}{subsection.1.A.5}%
+\contentsline {section}{\numberline {B}Códigos MATLAB}{39}{section.1.B}%
+\contentsline {subsection}{\numberline {B.1}\texttt {main.m}}{40}{subsection.1.B.1}%
+\contentsline {subsection}{\numberline {B.2}\texttt {flags.m}}{41}{subsection.1.B.2}%
+\contentsline {subsection}{\numberline {B.3}\texttt {config.m}}{42}{subsection.1.B.3}%
+\contentsline {subsection}{\numberline {B.4}\texttt {robot\_1.m}}{42}{subsection.1.B.4}%
+\contentsline {subsection}{\numberline {B.5}\texttt {inv\_kinematics.m}}{43}{subsection.1.B.5}%
+\contentsline {subsection}{\numberline {B.6}\texttt {gen\_traj.m}}{58}{subsection.1.B.6}%
+\contentsline {subsection}{\numberline {B.7}\texttt {tarea.m}}{62}{subsection.1.B.7}%
+\contentsline {subsection}{\numberline {B.8}\texttt {ik\_comparison.m}}{63}{subsection.1.B.8}%
+\contentsline {subsection}{\numberline {B.9}\texttt {scale.m}}{68}{subsection.1.B.9}%
+\contentsline {subsection}{\numberline {B.10}\texttt {sym\_1.m}}{69}{subsection.1.B.10}%
+\contentsline {subsection}{\numberline {B.11}\texttt {test\_workspace.m}}{70}{subsection.1.B.11}%
+\contentsline {subsection}{\numberline {B.12}\texttt {test\_inv\_kinematics.m}}{71}{subsection.1.B.12}%
+\contentsline {subsection}{\numberline {B.13}\texttt {test\_singularities.m}}{74}{subsection.1.B.13}%
+\contentsline {subsection}{\numberline {B.14}\texttt {test\_gen\_traj.m}}{76}{subsection.1.B.14}%
+\contentsline {subsection}{\numberline {B.15}\texttt {myAnimate.m}}{77}{subsection.1.B.15}%
+\contentsline {subsection}{\numberline {B.16}\texttt {grafQ.m}}{86}{subsection.1.B.16}%
+\contentsline {subsection}{\numberline {B.17}\texttt {grafQaE.m}}{87}{subsection.1.B.17}%
+\contentsline {subsection}{\numberline {B.18}\texttt {grafScaling.m}}{89}{subsection.1.B.18}%

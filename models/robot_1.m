@@ -22,7 +22,7 @@ dh = [
     0       d_4     a_4         pi/2;
     0       d_5     a_5         -pi/2;
     0       d_6     a_6         0
-
+    
     ];
 
 
@@ -59,7 +59,7 @@ q_0 = [0 0 0 0 0 0];
 % axis manual
 % hold on
 % trplot(R.A(1:5, q_0).T, 'frame', '5', 'length', 0.1)
-% hold on   
+% hold on
 % trplot(R.A(1:4, q_0).T, 'frame', '4', 'length', 0.08)
 % hold on
 % trplot(R.A(1:3, q_0).T, 'frame', '3', 'length', 0.05)

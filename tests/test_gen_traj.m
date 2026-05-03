@@ -26,10 +26,6 @@ qddmax = [800 800 800 800 800 800]*d;
 
 [q_traj, dbg] = gen_traj(R, cpoints_modes, q0, qdmax, qddmax, 0, vmax, amax, wmax, alphamax);
 
-
-
-% R.plot(q_traj,'workspace',[-1,1,-1,1,-1,1],'trail',{'r','LineWidth',2}, 'scale',0.5);
-
 myAnimate(R, q_traj, cad_path);
 
 grafQaE(R, q_traj);
@@ -44,5 +40,36 @@ end
 grafQ(q_traj,qd_traj,qdd_traj)
 
 grafScaling(R, dbg, qdmax, vmax, amax, wmax, alphamax)
+
+%% Verificación de paso por puntos de control
+
+N = size(q_traj,1);
+N_cpoints = size(cpoints_modes,1);
+N_alcanzados = 0;
+
+for i = 1:N
+    T_i = R.fkine(q_traj(i,:));
+    
+    for j = 1:N_cpoints
+        T_cpoint = transl(cpoints_modes(j,1), cpoints_modes(j,2), cpoints_modes(j,3)) * ...
+            rpy2tr(cpoints_modes(j,4), cpoints_modes(j,5), cpoints_modes(j,6));
+        R_i    = [T_i.n, T_i.o, T_i.a];
+        pos_ok = norm(T_i.t - T_cpoint(1:3,4))        < e;
+        rot_ok = norm(R_i   - T_cpoint(1:3,1:3), 'fro') < e; % Norma frobenius, similar a euclidiana pero tiene pasos previos para llevar la matriz a un vector.
+        if pos_ok && rot_ok
+            N_alcanzados = N_alcanzados + 1;
+            break
+        end
+    end
+    
+end
+N_alcanzados
+if N_alcanzados >= N_cpoints
+    disp("Todos los puntos de control fueron alcanzados.");
+else
+    disp("No se alcanzaron todos los puntos de control.");
+end
+
+
 
 end
