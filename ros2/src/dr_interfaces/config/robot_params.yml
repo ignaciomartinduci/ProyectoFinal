@@ -1,0 +1,50 @@
+robot:
+  ros__parameters:
+
+    joint_names: ['joint1', 'joint2', 'joint3', 'joint4', 'joint5', 'joint6']
+
+    # Parámetros DH: [theta, d, a, alpha]
+    dh_theta_offset:  [0.0, -1.5708, 0.0, 1.5708, 0.0, 0.0]
+    dh_d:             [0.25, 0.0, 0.295, 0.0, 0.1, 0.0]
+    dh_a:             [0.0, 0.25, 0.25, 0.0, 0.0, 0.0]
+    dh_alpha:         [-1.5708, 0.0, 0.0, 1.5708, -1.5708, 0.0]
+
+    # Límites de las articulaciones (radianes)
+    q_max:            [6.28318, 6.28318, 6.28318, 6.28318, 6.28318, 1000000000.0]
+    q_min:            [-6.28318, -6.28318, -6.28318, -6.28318, -6.28318, -1000000000.0]
+
+    # Velocidades máximas de las articulaciones (rad/s)
+    qd_max:           [3.14159, 3.14159, 3.14159, 3.14159, 3.14159, 3.14159]
+
+    # Aceleraciones máximas de las articulaciones (rad/s^2)
+    qdd_max:          [6.28318, 6.28318, 6.28318, 6.28318, 6.28318, 6.28318]
+
+    # Velocidad máxima lineal del efector final (m/s)
+    ef_v_max:          1.0
+
+    # Aceleración máxima lineal del efector final (m/s^2)
+    ef_a_max:          1.5
+
+    # Velocidad máxima angular del efector final (rad/s)
+    ef_omega_max:          3.0
+
+    # Aceleración máxima angular del efector final (rad/s^2)
+    ef_alpha_max:      3.0
+
+    # Configuración articular inicial del robot
+    q0: [0.5579, 0.1345, 1.866, 2.7257, 1.5741, -1.023]
+
+    # Hardware
+    ctrl_freq: 100.0
+    
+    # Base del robot
+    T_base:
+      xyz: [0.0, 0.0, 0.0]
+      rpy: [0.0, 0.0, 0.0]
+
+    # Herramienta del robot
+    T_tool:
+      xyz: [0.0, 0.0, 0.190]
+      rpy: [0.0, 0.0, 0.0]
+
+

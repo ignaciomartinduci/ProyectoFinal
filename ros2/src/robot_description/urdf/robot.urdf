@@ -1,0 +1,146 @@
+<?xml version="1.0" ?>
+<robot name="robot_6dof">
+
+  <!-- MATERIALES -->
+  <material name="gris"><color rgba="0.7 0.7 0.7 1.0"/></material>
+  <material name="azul_profundo"><color rgba="0.0 0.1 0.6 1"/></material>
+  <material name="celeste"><color rgba="0.4 0.75 1.0 1"/></material>
+
+  <!-- LINKS -->
+  <link name="world"/>
+
+  <joint name="world_to_base" type="fixed">
+    <parent link="world"/>
+    <child link="base_link"/>
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+  </joint>
+
+  <link name="base_link">
+    <visual>
+      <geometry><mesh filename="package://robot_description/meshes/base_link.stl"/></geometry>
+      <material name="azul_profundo"/>
+    </visual>
+  </link>
+
+  <!-- JOINT 1 (DH Fila 1: d=0.25, a=0, alpha=-pi/2) -->
+  <joint name="joint_1" type="revolute">
+    <parent link="base_link"/>
+    <child link="link_1"/>
+    <!-- d_1: sube el sistema al primer centro de rotación -->
+    <origin xyz="0 0 0.25" rpy="0 0 0"/>
+    <axis xyz="0 0 1"/>
+    <limit lower="-6.2831" upper="6.2831" effort="100" velocity="3.14159"/>
+  </joint>
+
+  <link name="link_1">
+    <visual>
+      <origin xyz="0 0 0" rpy="-1.5708 0 0"/>
+      <geometry><mesh filename="package://robot_description/meshes/link1.stl"/></geometry>
+      <material name="celeste"/>
+    </visual>
+  </link>
+
+  <!-- JOINT 2 (DH Fila 2: d=0, a=0.25, alpha=0) -->
+  <joint name="joint_2" type="revolute">
+    <parent link="link_1"/>
+    <child link="link_2"/>
+    <!-- Aquí aplicamos alpha_1 (-pi/2) y a_1 (0) de la fila anterior -->
+    <origin xyz="0 0 0" rpy="-1.5708 0 0"/>
+    <axis xyz="0 0 1"/>
+    <limit lower="-6.2831" upper="6.2831" effort="100" velocity="3.14159"/>
+  </joint>
+
+  <link name="link_2">
+    <visual>
+      <!-- El visual se desplaza a_2 (0.25) para que el brazo coincida -->
+      <origin xyz="0.25 0 0" rpy="0 0 0"/>
+      <geometry><mesh filename="package://robot_description/meshes/link2.stl"/></geometry>
+      <material name="azul_profundo"/>
+    </visual>
+  </link>
+
+  <!-- JOINT 3 (DH Fila 3: d=0.295, a=0.25, alpha=0) -->
+  <joint name="joint_3" type="revolute">
+    <parent link="link_2"/>
+    <child link="link_3"/>
+    <!-- Aplicamos a_2 (0.25) y alpha_2 (0) -->
+    <origin xyz="0.25 0 0" rpy="0 0 0"/>
+    <axis xyz="0 0 1"/>
+    <limit lower="-6.2831" upper="6.2831" effort="100" velocity="3.14159"/>
+  </joint>
+
+  <link name="link_3">
+    <visual>
+      <!-- d_3 (0.295) y a_3 (0.25) para el dibujo -->
+      <origin xyz="0.25 0 0.295" rpy="0 0 0"/>
+      <geometry><mesh filename="package://robot_description/meshes/link3.stl"/></geometry>
+      <material name="celeste"/>
+    </visual>
+  </link>
+
+  <!-- JOINT 4 (DH Fila 4: d=0, a=0, alpha=pi/2) -->
+  <joint name="joint_4" type="revolute">
+    <parent link="link_3"/>
+    <child link="link_4"/>
+    <!-- Aplicamos a_3 (0.25), d_3 (0.295) y alpha_3 (0) -->
+    <origin xyz="0.25 0 0.295" rpy="0 0 0"/>
+    <axis xyz="0 0 1"/>
+    <limit lower="-6.2831" upper="6.2831" effort="100" velocity="3.14159"/>
+  </joint>
+
+  <link name="link_4">
+    <visual>
+      <origin xyz= "0 0 0" rpy="1.5708 0 0"/>
+      <geometry><mesh filename="package://robot_description/meshes/link4.stl"/></geometry>
+      <material name="azul_profundo"/>
+    </visual>
+  </link>
+
+  <!-- JOINT 5 (DH Fila 5: d=0.10, a=0, alpha=-pi/2) -->
+  <joint name="joint_5" type="revolute">
+    <parent link="link_4"/>
+    <child link="link_5"/>
+    <!-- Aplicamos alpha_4 (pi/2) y d_4 (0) -->
+    <origin xyz="0 0 0" rpy="1.5708 0 0"/>
+    <axis xyz="0 0 1"/>
+    <limit lower="-6.2831" upper="6.2831" effort="100" velocity="3.14159"/>
+  </joint>
+
+  <link name="link_5">
+    <visual>
+      <!-- d_5 (0.10) para el dibujo -->
+      <origin xyz="0 0 0.1" rpy="-1.5708 0 0"/>
+      <geometry><mesh filename="package://robot_description/meshes/link5.stl"/></geometry>
+      <material name="celeste"/>
+    </visual>
+  </link>
+
+  <!-- JOINT 6 (DH Fila 6: d=0, a=0, alpha=0) -->
+  <joint name="joint_6" type="continuous">
+    <parent link="link_5"/>
+    <child link="link_6"/>
+    <!-- Aplicamos alpha_5 (-pi/2) y d_5 (0.10) -->
+    <origin xyz="0 0 0.1" rpy="-1.5708 0 0"/>
+    <axis xyz="0 0 1"/>
+    <limit effort="100" velocity="3.14159"/>
+  </joint>
+
+  <link name="link_6">
+    <visual>
+      <origin xyz="0 0 0.190" rpy="0 0 0"/>
+      <geometry><mesh filename="package://robot_description/meshes/link6.stl"/></geometry>
+      <material name="azul_profundo"/>
+    </visual>
+  </link>
+
+  <!-- TCP (Herramienta final) -->
+  <joint name="joint_tcp" type="fixed">
+    <parent link="link_6"/>
+    <child link="tcp"/>
+    <!-- TCP según tu cálculo: 0.145 + 0.045 = 0.19 -->
+    <origin xyz="0 0 0.19" rpy="0 0 0"/>
+  </joint>
+
+  <link name="tcp"/>
+
+</robot>

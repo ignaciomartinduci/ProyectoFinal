@@ -1,48 +1,88 @@
-# Diseño y simulación de un robot manipulador serial de seis grados de libertad para automatización logística.
-
+# Diseño y simulación de un robot manipulador serial de 6 GDL para automatización logística
 
 ## Descripción
 
-Este proyecto presenta el desarrollo de un robot manipulador serial de seis grados de libertad orientado a aplicaciones de automatización logística.
+Desarrollo de un robot manipulador serial de seis grados de libertad orientado a aplicaciones de automatización logística. El proyecto abarca el modelado cinemático, resolución de cinemática inversa y generación de trayectorias, implementados primero en MATLAB y luego integrados en un sistema de control distribuido basado en ROS 2.
 
-Se aborda el modelado cinemático, la resolución de la cinemática inversa y la generación de trayectorias, inicialmente implementadas en MATLAB y posteriormente integradas en un entorno de control basado en ROS 2.
+## Estructura del repositorio
 
+```
+├── matlab/          # Algoritmos de cinemática, trayectorias y visualización
+│   ├── main.m       # Punto de entrada
+│   ├── flags.m      # Selector de funcionalidades
+│   ├── config.m     # Parámetros globales
+│   ├── modules/     # Cinemática inversa, generación de trayectorias, etc.
+│   ├── models/      # Modelos STL y CAD del robot
+│   ├── tests/       # Tests de cinemática y workspace
+│   ├── visualization/
+│   └── third_party/ # Robotics Toolbox + Spatial Math Toolbox
+├── ros2/            # Sistema de control distribuido
+│   ├── Dockerfile
+│   ├── docker-compose.yml
+│   └── src/         # Paquetes ROS 2 (cinemática, trayectorias, GUI, etc.)
+└── docs/
+    └── informe/     # Informe del proyecto (LaTeX + PDF)
+```
 
-## Objetivos
+## Requisitos
 
-- Definir especificaciones del robot y de su tarea.
-- Realizar un diseño conceptual preliminar.
-- Desarrollar el modelo cinemático con resolución de la cinemática inversa y generación de trayectorias.
-- Diseñar/adaptar modelo CAD.
-- Integración de soluciones en entorno ROS 2.
+### MATLAB
+- MATLAB R2020b o superior
+- Robotics Toolbox for MATLAB (Peter Corke) — incluido en `matlab/third_party/`
+- Spatial Math Toolbox — incluido en `matlab/third_party/`
 
+### ROS 2
+- Docker y Docker Compose
 
-## Requisitos del sistema
+## Uso
 
-Para la correcta ejecución del proyecto se requiere:
+### MATLAB
 
-- Sistema operativo: Windows, Linux o macOS
-- MATLAB (versión R2020 o superior recomendada)
-- Robotics Toolbox for MATLAB (Peter Corke)
-- ...
+1. Abrir MATLAB y establecer el directorio de trabajo en `matlab/`:
 
+```matlab
+cd matlab
+```
 
-## Instalación
+2. Configurar las funcionalidades a ejecutar en `matlab/flags.m`:
 
-Clonar el repositorio:
+| Flag | Descripción |
+|---|---|
+| `TEST_INV_KINEMATICS` | Prueba la cinemática inversa con un ejemplo |
+| `TEST_LOOP_IK` | Test en loop sobre posiciones aleatorias (requiere la anterior) |
+| `PRINT_SOLUTIONS` | Imprime soluciones geométricas y periódicas por consola |
+| `TEST_WORKSPACE` | Visualiza el espacio de trabajo del robot |
+| `SINGULARITIES` | Busca y verifica configuraciones singulares |
+| `TEST_GEN_TRAJ` | Prueba la generación de trayectorias |
+| `TAREA` | Ejecuta la tarea principal |
+| `IK_COMPARISON` | Visualiza la periodicidad articular de las soluciones IK |
+| `CAD_DESIGN` | Modelo 3D: `1` = CAD original, `2` = CAD alternativo |
+
+3. Ejecutar:
+
+```matlab
+main
+```
+
+### ROS 2 (Docker)
+
+Desde la carpeta `ros2/`:
+
+```bash
+cd ros2
+
+# Primera vez: construir la imagen
+docker compose build
+
+# Levantar el sistema
+docker compose up
+```
+
+El contenedor monta `ros2/src/` como volumen, por lo que los cambios en el código fuente se reflejan sin necesidad de reconstruir la imagen.
+
+## Clonado
 
 ```bash
 git clone https://github.com/ignaciomartinduci/ProyectoFinal.git
 cd ProyectoFinal
 ```
-
-
-## Ejecución
-
-La ejecución del proyecto se realiza desde MATLAB mediante el archivo principal `main.m`.
-
-Previo a la ejecución, se debe configurar el archivo `flags.m`, donde se selecciona la funcionalidad a ejecutar (por ejemplo: modelado, cinemática inversa, generación de trayectorias, simulación, etc.).
-
-En el siguiente diagrama se pueden ver las funcionalidades implementadas https://lucid.app/lucidchart/d1f889ce-072c-4336-91ca-7c0dc102ab88/edit?viewport_loc=98%2C-364%2C4254%2C2226%2C0_0&invitationId=inv_9000ccad-9b8f-46a1-832a-70b453ff8370
-
-

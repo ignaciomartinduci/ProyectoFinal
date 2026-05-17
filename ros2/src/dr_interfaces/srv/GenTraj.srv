@@ -1,0 +1,17 @@
+# ==============================
+# Proyecto Final de Estudios
+# Ignacio Martín Duci - Legajo: 13560
+# ==============================
+
+# REQUEST
+float64[] pose
+int8 mode
+int8 speed_profile
+
+---
+
+# RESPONSE
+float64[] q_traj
+int32 points
+bool success
+string message

@@ -1,0 +1,13 @@
+# ==============================
+# Proyecto Final de Estudios
+# Ignacio Martín Duci - Legajo: 13560
+# ==============================
+
+# REQUEST
+string name
+float64[] q_traj
+int32 points
+---
+# RESPONSE
+bool success
+string message

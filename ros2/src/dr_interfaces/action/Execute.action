@@ -1,0 +1,23 @@
+# ==============================
+# Proyecto Final de Estudios
+# Ignacio Martín Duci - Legajo: 13560
+# ==============================
+
+# GOAL
+float64[] q_traj
+int32 points
+
+---
+
+# RESULT
+bool success
+string message
+
+---
+
+# FEEDBACK
+float64[6] q
+float64[6] qd
+float64[6] qdd
+int32 point_index
+float64 progress

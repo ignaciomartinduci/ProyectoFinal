@@ -1,0 +1,17 @@
+services:
+  ros2_pfe:
+    build: .
+    image: ros2_pfe:latest
+    environment:
+      - DISPLAY=${DISPLAY}
+      - QT_X11_NO_MITSHM=1
+    volumes:
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw
+      - ./src:/root/ros2_PFE/src:rw
+      - trajectories:/root/ros2_PFE/src/trajectories
+    network_mode: host
+    stdin_open: true
+    tty: true
+
+volumes:
+  trajectories:
