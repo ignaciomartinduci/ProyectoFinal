@@ -16,20 +16,20 @@ a_6 = 0;
 
 % DH 1
 dh = [
-    0       d_1     a_1         -pi/2;
+    0       d_1     a_1         -1.5708;
     0       d_2     a_2         0;
     0       d_3     a_3         0;
-    0       d_4     a_4         pi/2;
-    0       d_5     a_5         -pi/2;
+    0       d_4     a_4         1.5708;
+    0       d_5     a_5         -1.5708;
     0       d_6     a_6         0
     
     ];
 
 
 
-q_offset = [0, -pi/2, 0, pi/2, 0, 0];
-qdmax = [pi pi pi pi pi pi]; % Velocidades máximas de cada articulación
-qddmax = [2*pi 2*pi 2*pi 2*pi 2*pi 2*pi];
+q_offset = [0, -1.5708, 0, 1.5708, 0, 0];
+qdmax = [3.14159 3.14159 3.14159 3.14159 3.14159 3.14159]; % Velocidades máximas de cada articulación
+qddmax = [6.28318 6.28318 6.28318 6.28318 6.28318 6.28318];
 
 R = SerialLink(dh,'name','DR - 1');
 R.offset = q_offset;

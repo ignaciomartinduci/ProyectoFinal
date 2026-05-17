@@ -9,4 +9,4 @@ TAREA = 1; % Tarea principal
 IK_COMPARISON = 0; % Visualización de periodicidad articular de soluciones IK
 
 %% Flags de opciones
-CAD_DESIGN = 2; % Diseño 3D: 1 = models/CAD  |  2 = models/CAD2
+CAD_DESIGN = 1; % Diseño 3D: 1 = models/CAD  |  2 = models/CAD2

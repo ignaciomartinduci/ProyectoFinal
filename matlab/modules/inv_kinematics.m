@@ -14,7 +14,6 @@ eps = 10^-6;
 base = [R.base.n R.base.o R.base.a R.base.t; [0 0 0 1]];
 tool = [R.tool.n R.tool.o R.tool.a R.tool.t; [0 0 0 1]];
 
-
 T_06 = transl(x_t,y_t,z_t) * trotz(gamma)*troty(beta)*trotx(alpha); % RPY ZYX
 T_06_full = T_06;
 T_06 = base \ T_06_full / tool;
@@ -816,18 +815,20 @@ function q_mejor = costo_simple(q_previo, ampl_all_sol, all_sol, pose_config)
 q_mejor = q_previo;
 costo_mejor = inf;
 
-
+disp(q_previo)
+disp(all_sol)
+disp(pose_config)
 
 if pose_config == "FORCE"
     
     for  i = 1:size(all_sol,1)
         
-        dq = wrapToPi(all_sol(i,:) - q_previo);
+        dq = all_sol(i,:) - q_previo;
         
         costo_nuevo = sum(abs(dq));
         
         if costo_nuevo < costo_mejor
-            q_mejor = q_previo + dq;
+            q_mejor = all_sol(i,:);
             costo_mejor = costo_nuevo;
         end
         
@@ -837,12 +838,12 @@ else
     
     for  i = 1:size(ampl_all_sol,1)
         
-        dq = wrapToPi(ampl_all_sol(i,:) - q_previo);
+        dq = ampl_all_sol(i,:) - q_previo;
         
         costo_nuevo = sum(abs(dq));
         
         if costo_nuevo < costo_mejor
-            q_mejor = q_previo + dq;
+            q_mejor = ampl_all_sol(i,:);
             costo_mejor = costo_nuevo;
         end
         

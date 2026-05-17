@@ -7,7 +7,7 @@ e = 0.01;
 q_tik = [1.8358    0.4922   -1.9151   -0.5557    1.7815    1.2078];
 %R.plot(q_tik)
 
-q_previo = [29 29 29 29 29 29]*d;
+q_previo = [0 0 0 0 0 0]*d;
 disp("Posición articular previa")
 disp(q_previo)
 
@@ -27,13 +27,13 @@ beta_tik = rpy_tik(2);
 gamma_tik = rpy_tik(3);
 
 % override
-% x_tik = 0;
-% y_tik = 0.3;
-% z_tik = 0.25;
+x_tik = 0.1;
+y_tik = 0.2;
+z_tik = 0.1;
 % %
-% alpha_tik = 0*d+e;
-% beta_tik = 180*d+e;
-% gamma_tik = 0*d+e;
+alpha_tik = 0.4;
+beta_tik = 0.5;
+gamma_tik = 0.6;
 
 coordenadas_cartesianas = "x = "+string(x_tik)+" | y = "+string(y_tik)+" | z = "+string(z_tik)+" | alpha = "+string(alpha_tik)+" | beta = "+string(beta_tik)+" | gamma = "+string(gamma_tik);
 
@@ -41,7 +41,7 @@ disp("Las coordenadas cartesianas consigna son: ")
 disp(coordenadas_cartesianas)
 
 
-[sol_tik, q_mejor] = inv_kinematics(x_tik,y_tik,z_tik,alpha_tik,beta_tik,gamma_tik, q_previo, 1, R);
+[sol_tik, q_mejor] = inv_kinematics(x_tik,y_tik,z_tik,alpha_tik,beta_tik,gamma_tik, q_previo, 1, R, "FORCE");
 
 if ~isempty(sol_tik)
     
