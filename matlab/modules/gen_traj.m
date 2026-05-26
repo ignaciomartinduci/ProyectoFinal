@@ -155,19 +155,23 @@ end
 k_qd  = max(max(abs(qdtraj),  [], 1) ./ qdmax);
 k_qdd = sqrt(max(max(abs(qddtraj), [], 1) ./ qddmax));
 
-% Espacio cartesiano: velocidad y aceleración reales via Jacobiano
-v_lin = zeros(N,1); v_ang = zeros(N,1);
-a_lin = zeros(N,1); a_ang = zeros(N,1);
-
+% Espacio cartesiano: velocidad via Jacobiano, aceleración por diferenciación
+% numérica de v_cart (incluye implícitamente el término Jdot*qd)
+v_cart = zeros(N, 6);
 for i = 1:N
-    J  = R.jacob0(qtraj(i,:));
-    cv = J * qdtraj(i,:)';
-    ca = J * qddtraj(i,:)';
-    v_lin(i) = norm(cv(1:3));
-    v_ang(i) = norm(cv(4:6));
-    a_lin(i) = norm(ca(1:3));
-    a_ang(i) = norm(ca(4:6));
+    J = R.jacob0(qtraj(i,:));
+    v_cart(i,:) = (J * qdtraj(i,:)')';
 end
+
+a_cart = zeros(N, 6);
+for j = 1:6
+    a_cart(:,j) = gradient(v_cart(:,j), dt);
+end
+
+v_lin = vecnorm(v_cart(:,1:3), 2, 2);
+v_ang = vecnorm(v_cart(:,4:6), 2, 2);
+a_lin = vecnorm(a_cart(:,1:3), 2, 2);
+a_ang = vecnorm(a_cart(:,4:6), 2, 2);
 
 k_v     = max(v_lin) / vmax;
 k_w     = max(v_ang) / wmax;

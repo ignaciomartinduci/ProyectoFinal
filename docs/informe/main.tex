@@ -4,7 +4,6 @@
 % ======================================================================
 
 % Paquetes extras
-\usepackage{xcolor}
 \usepackage{matlab-prettifier}
 \usepackage{ragged2e} % for \justifying
 \usepackage[square, numbers, sort]{natbib}
@@ -25,8 +24,6 @@
             urlcolor  = blue,
             citecolor = orange,
             anchorcolor = blue]{hyperref} % for hyperlinks
-\usepackage{xcolor} % text colors
-\usepackage{minted}
 \usepackage{makecell}
 \usepackage{tikz}
 \usetikzlibrary{positioning,arrows.meta}
@@ -85,11 +82,6 @@
 % Directorio con imagenes
 \graphicspath{{src/}}
 
-% Cabecera del documento
-% ======================================================================
-\thispagestyle{empty} % Sin encabezado en la primera página
-\newpage
-\pagestyle{fancyheader} % Activar encabezado en el resto del documento
 % Titulo
 \title{Diseño y simulación de un robot manipulador serial de seis grados de libertad para automatización logística.}
 
@@ -103,11 +95,9 @@
 % Cuerpo del documento
 % ======================================================================
 \begin{document}
+\thispagestyle{empty}
+\pagestyle{fancyheader}
 \justifying
-
-% Comandos definidos por el autor
-
-% Crear cabecera
 
 \maketitle
 % ======================================================================
@@ -220,13 +210,10 @@ Los siguientes objetivos se desarrollan en dos etapas: los ítems 1 a 6 correspo
     \item Desarrollar un modelo CAD para simulaciones cinemáticas, asegurando la correspondencia entre los sistemas de referencia de cada componente y los marcos definidos mediante la convención Denavit–Hartenberg, a fin de garantizar consistencia geométrica y fidelidad en la representación del sistema en entornos de simulación.
     \item Desarrollar el modelo del robot en formato URDF a partir de la parametrización cinemática definida (DH), asegurando la correcta correspondencia entre eslabones y articulaciones.
     \item Integrar y verificar la coherencia de las geometrías CAD como representaciones visuales del modelo.
-    \item Desarrollar y validar un nodo en ROS 2 encargado de publicar estados articulares del manipulador, permitiendo definir configuraciones de prueba y animar el modelo en el entorno de simulación.
-    \item Desarrollar y validar un nodo o servicio en ROS 2 que implemente la cinemática inversa previamente desarrollada del manipulador, permitiendo calcular configuraciones articulares a partir de poses objetivo del efector final. 
-    \item Desarrollar un nodo de ROS 2 encargado de la generación de trayectorias articulares y/o cartesianas a partir del programa desarrollado previamente.
-    \item Implementar y validar la ejecución completa de la tarea, integrando los nodos de cinemática inversa, generación de trayectorias y publicación de estados articulares.
-    \item Realizar simulaciones físicas  en el entorno de ROS 2 para evaluar el comportamiento del robot bajo nuevos fenómenos.
-    \item Desarrollar una interfaz gráfica en ROS 2 que permita la visualización en tiempo real de variables cinemáticas y dinámicas del robot, así como el ingreso de comandos de alto nivel para la ejecución de tareas dentro del entorno ROS 2.
-    
+    \item Implementar el desarrollo de cinemática inversa, cinemática directa y generación de trayectorias en ROS 2.
+    \item Desarrollar nodos de \textit{teaching} y gestión de trayectorias en ROS 2.
+    \item Desarrollar nodo de interfaz de usuario gráfica que permita el movimiento manual, enseñanza y gestión de trayectorias del robot, así como análisis de variables cinemáticas en ROS 2.
+    \item Implementar formato de descripción universal del robot (URDF) para simular con mayor estética el robot en entorno RViz.
 \end{enumerate}
 
 
@@ -289,7 +276,7 @@ Se definen también otras especificaciones y condiciones del entorno, posiblemen
 % ======================================================================
 \newpage
 \section{Diseño conceptual preliminar}
-\label{sec:diseño_conceptual_preliminar}
+\label{sec:diseno_conceptual_preliminar}
 
 Con el objetivo de tener un punto de partida en cuanto a la morfología y dimensiones del robot, tomando como referencia al robot \href{https://www.universal-robots.com/products/ur3e?utm_source=chatgpt.com}{UR3e}, se define la siguiente estructura, morfología y dimensiones:
 
@@ -469,7 +456,7 @@ Dado que se ha definido el modelo cinemático directo al haber elaborado la matr
 Al desacoplar la base y la herramienta final se puede conocer:
 
 \begin{equation}
-\label{eq:ci_1}
+\label{eq:ci_desacople}
     T^0_6=[T^{base}_0]^{-1}T^{base}_{tcp}[T^6_{tcp}]^{-1}
 \end{equation}
 
@@ -1303,16 +1290,484 @@ Cabe destacar que esta modificación es estrictamente geométrica: la parametriz
 \section{Simulación y verificación de tarea}
 \label{sec:sim_tarea}
 
+Implementando, de forma conjunta el cálculo de la cinemática inversa y el algoritmo de generación de trayectorias, puede desarrollarse una trayectoria para la tarea la cual luego será simulada y analizada.
+
+Para esto se definen los siguientes puntos vía, cuyas orientaciones corresponden a ángulos de Euler ZYX en grados (la herramienta apunta siempre hacia abajo, $\beta = 180\degree$):
+
+\begin{table}[H]
+    \centering
+    \label{tab:puntos_via}
+    \renewcommand{\arraystretch}{1.3}
+    \begin{tabular}{lrrrrrr}
+        \toprule
+        \textbf{Punto} & \textbf{x [m]} & \textbf{y [m]} & \textbf{z [m]} & \boldmath$\alpha$ [\degree] & \boldmath$\beta$ [\degree] & \boldmath$\gamma$ [\degree] \\
+        \midrule
+        \texttt{caja\_origen\_superior}  & $-0.22$ & $0.30$ & $0.20$ & $0$ & $180$ & $0$ \\
+        \texttt{caja\_origen\_inferior}  & $-0.22$ & $0.30$ & $0.01$ & $0$ & $180$ & $0$ \\
+        \texttt{aux\_1}                  & $-0.10$ & $0.30$ & $0.22$ & $0$ & $180$ & $0$ \\
+        \texttt{punto\_medio}            & $ 0.00$ & $0.30$ & $0.25$ & $0$ & $180$ & $0$ \\
+        \texttt{aux\_2}                  & $ 0.10$ & $0.30$ & $0.22$ & $0$ & $180$ & $0$ \\
+        \texttt{caja\_destino\_superior} & $ 0.22$ & $0.30$ & $0.20$ & $0$ & $180$ & $0$ \\
+        \texttt{caja\_destino\_inferior} & $ 0.22$ & $0.30$ & $0.01$ & $0$ & $180$ & $0$ \\
+        \bottomrule
+    \end{tabular}
+    \caption{Puntos vía de la tarea de \textit{bin-to-bin transfer}.}
+\end{table}
+
+\text{NOTA:} En el código se realiza la conversión de grados a radianes y, a los valores angulares, se le aplica una pequeña rotación adicional para evitar definir puntos vía que conduzcan a configuraciones singulares.
+
+El \textit{script} permite el comienzo desde un punto aleatorio o desde un punto conocido. Se recuerda que, en conjunto con los puntos vías debe ser proporcionada la indicación del método de interpolación a utilizar, la secuencia es la siguiente:
+
+\begin{enumerate}
+    \item \textbf{Posición inicial a punto medio:} Interpolación articular
+    \item \textbf{Punto medio a caja origen superior:} Interpolación articular
+    \item \textbf{caja origen superior a caja origen inferior:} Interpolación cartesiana
+    \item \textbf{Caja origen inferior a caja origen superior:} Interpolación cartesiana
+    \item \textbf{Caja origen superior a punto medio:} Interpolación articular
+    \item \textbf{Punto medio a caja destino superior:} Interpolación articular
+    \item \textbf{Caja destino superior a caja destino inferior:} Interpolación cartesiana
+    \item \textbf{Caja destino inferior a caja destino superior:} Interpolación cartesiana
+    \item \textbf{Caja destino superior a punto medio:} Interpolación articular
+\end{enumerate}
+
+De este modo, se tendrá mayor control en el espacio cartesiano cuando se requiera ingresar y egresar de la caja de recogida y de colocación.
+
+A continuación, se presenta una imagen luego de la simulación:
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.85\linewidth]{simulacion_tarea.png}
+    \caption{Imagen del final de la simulacion de la tarea.}
+    \label{fig:simulacion_tarea}
+\end{figure}
+
+En la imagen puede verse el recorrido del robot, el cual ha dejado una traza roja de la posición del efector final. En el inicio de la trayectoria puede verse una maniobra que busca posicionar al robot en el llamado punto medio bajo una configuración articular geométrica lo que beneficiará el comportamiento posterior dado que se comenzará lejos de los límites articulares.
+A los costados del robot, pueden verse gráficas animadas de la posición instantánea de cada articulación y del valor instantáneo del jacobiano lo que permite evaluar diferentes trayectoriaas.
+
+Luego de la simulación, se obtienen las siguientes gráficas para el análisis de las variables cinemáticas tanto del efector final como de las articulaciones, puede notarse que no se sobrepasan significativamente límites cinemáticos:
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.85\linewidth]{tarea_pa.png}
+    \caption{Evolución de posiciones articulares en la simulacion de la tarea.}
+    \label{fig:tarea_pa}
+\end{figure}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.85\linewidth]{tarea_pc.png}
+    \caption{Evolución de la posición cartesiana del efector final en la simulacion de la tarea.}
+    \label{fig:tarea_pc}
+\end{figure}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.85\linewidth]{tarea_va_art.png}
+    \caption{Evolución de velocidades y aceleraciones articulares en la simulación de la tarea.}
+    \label{fig:tarea_va_art}
+\end{figure}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.85\linewidth]{tarea_va_ef.png}
+    \caption{Evolución de velocidades y aceleraciones lineales y angulares del efector final en la simulación de la tarea.}
+    \label{fig:tarea_va_ef}
+\end{figure}
+
+
+
+
+
 % ======================================================================
 \newpage
 \section{Integración en entorno ROS2}
 \label{sec:ROS2}
 
+En esta sección se describe la integración del manipulador en el entorno \textit{Robot Operating System 2} (ROS~2). El objetivo es trasladar el desarrollo realizado en MATLAB ---cinemática directa, cinemática inversa y generación de trayectorias--- a una plataforma de software orientada a sistemas robóticos reales, aportando modularidad, comunicación entre procesos y capacidad de simulación mediante RViz. La totalidad del software ha sido desarrollada de forma propia, sin recurrir a librerías de alto nivel específicas de robótica, con el objetivo de maximizar el aprendizaje obtenido y obtener la mayor flexibilidad posible en el diseño de la arquitectura.
+
+La integración se estructura en torno a un conjunto de nodos que encapsulan responsabilidades bien definidas: cálculo cinemático, gestión de trayectorias, \textit{teaching} y visualización a través de una interfaz gráfica. Estos nodos se comunican mediante tópicos y servicios de ROS2, conformando una arquitectura distribuida que permite operar el robot de forma manual o autónoma.
+
+El modelo del robot se describe en formato URDF (\textit{Unified Robot Description Format}), derivado directamente de la parametrización Denavit-Hartenberg definida en la sección \ref{sec:modelado_cinematico}, lo que garantiza consistencia geométrica entre el modelo cinemático y su representación en el entorno de simulación.
+
+\subsection{Arquitectura del sistema}
+En primer lugar, se ha desarrollado un nodo \colorbox{gray!20}{\texttt{dr.launcher.py}} que se encarga de levantar todos los nodos y enviar, en la mayoría de los casos, los parámetros del robot \colorbox{gray!20}{\texttt{robot\_params.yml}} el cual, no contiene la definición URDF del robot sino parámetros de la cadena cinemáticos, límites cinemáticos y transformaciones de base y de herramienta.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.85\linewidth]{ros2_arq_1.png}
+    \caption{Esquema de levantamiento de nodos desde nodo launcher.}
+    \label{fig:ros2_arq_1}
+\end{figure}
+
+A continuación se describe el propósito e interfaz principal de cada nodo. Los nodos de desarrollo propio se agrupan en paquetes con el prefijo \texttt{dr\_}; el nodo \texttt{robot\_state\_publisher} es el nodo estándar de ROS~2 que publica las transformaciones del árbol cinemático a partir del URDF y del tópico \texttt{/joint\_states}.
+
+\begin{table}[H]
+    \centering
+    \caption{Nodos del sistema ROS~2 y sus interfaces principales.}
+    \label{tab:ros2_nodos}
+    \renewcommand{\arraystretch}{1.5}
+    \begin{tabular}{l l p{7.5cm}}
+        \toprule
+        \textbf{Nodo} & \textbf{Paquete} & \textbf{Descripción e interfaz principal} \\
+        \midrule
+
+        \texttt{fk\_node} & \texttt{dr\_kinematics} &
+            Resuelve la cinemática directa. Expone el servicio \texttt{/dr/solve\_fk}: recibe los ángulos articulares $\mathbf{q}$ y devuelve la pose cartesiana del efector final. \\
+
+        \texttt{ik\_node} & \texttt{dr\_kinematics} &
+            Resuelve la cinemática inversa analítica. Expone el servicio \texttt{/dr/solve\_ik}: recibe una pose cartesiana y devuelve el conjunto de soluciones articulares válidas. \\
+
+        \texttt{gen\_traj\_node} & \texttt{dr\_trajectory} &
+            Genera trayectorias en espacio articular o cartesiano con escalado de velocidades. Expone \texttt{/dr/gen\_traj}; consume internamente \texttt{/dr/solve\_ik} y \texttt{/dr/solve\_fk}. Se suscribe a \texttt{/dr/robot\_state} para obtener la configuración inicial. \\
+
+        \texttt{state\_node} & \texttt{dr\_state} &
+            Agrega el estado articular (\texttt{/dr/joint\_state}) y el estado de herramienta (\texttt{/dr/tool\_state}), calcula la pose cartesiana o configuración articular actual mediante cinemática directa o inversa según corresponda y publica el estado unificado del robot en \texttt{/dr/robot\_state}. \\
+
+        \texttt{joint\_state\_bridge\_node} & \texttt{dr\_state} &
+            Convierte \texttt{/dr/robot\_state} al mensaje estándar \texttt{sensor\_msgs\allowbreak/JointState} publicado en \texttt{/joint\_states}, necesario para la visualización en RViz y para el \texttt{robot\_state\_publisher}. \\
+
+        \texttt{executor\_node} & \texttt{dr\_executor} &
+            Ejecuta una trayectoria articular recibida como objetivo de la acción \texttt{/dr/execute}, publicando realimentación de posición en \texttt{/dr/joint\_state} a lo largo del recorrido. \\
+
+        \texttt{storage\_node} & \texttt{dr\_storage} &
+            Gestiona la persistencia de trayectorias en formato JSON. Expone los servicios \texttt{/dr/save\_traj}, \texttt{/dr/load\_traj}, \texttt{/dr/list\_trajs} y \texttt{/dr/delete\_traj}. \\
+
+        \texttt{teaching\_node} & \texttt{dr\_teaching} &
+            Convierte incrementos cartesianos recibidos en \texttt{/dr/\allowbreak teaching\_delta} en comandos de pose de herramienta publicados en \texttt{/dr/tool\_state}, habilitando el movimiento manual incremental del efector final. \\
+
+        \texttt{gui\_node} & \texttt{dr\_gui} &
+            Interfaz gráfica (PyQt5) que centraliza las funcionalidades del sistema: movimiento manual, enseñanza de puntos, generación y gestión de trayectorias, ejecución y análisis de variables cinemáticas. Se suscribe a \texttt{/dr/robot\_state}, publica en \texttt{/dr/teaching\_delta} y consume todos los servicios y la acción \texttt{/dr/execute}. \\
+
+   \end{tabular}
+\end{table}
+
+% ======================================================================
+\subsection{Interfaces personalizadas}
+\label{sec:ros2_interfaces}
+
+Todas las interfaces de comunicación fueron definidas de forma propia en el paquete \texttt{dr\_interfaces}. Se clasifican en mensajes, servicios y acciones.
+
+En el caso de las trayectorias articulares, los mensajes de ROS~2 no admiten matrices bidimensionales de tamaño variable, por lo que se adoptó la convención de aplanarlas en vectores unidimensionales (\texttt{float64[]}). Cada grupo de seis valores consecutivos corresponde a una configuración articular $\mathbf{q} \in \mathbb{R}^6$, de modo que una trayectoria de $N$ puntos se representa como un vector de $6N$ elementos. El campo entero \texttt{points} acompaña siempre a \texttt{q\_traj} e indica el valor de $N$, necesario para reconstruir la matriz original al deserializar el mensaje.
+
+\subsubsection*{Mensajes}
+
+\begin{table}[H]
+    \centering
+    \caption{Mensajes personalizados (\texttt{dr\_interfaces/msg}).}
+    \label{tab:ros2_msgs}
+    \renewcommand{\arraystretch}{1.3}
+    \begin{tabular}{l p{4.5cm} p{5.5cm}}
+        \toprule
+        \textbf{Mensaje} & \textbf{Campos} & \textbf{Descripción} \\
+        \midrule
+        \texttt{JointState} &
+            \texttt{float64[6] q} \newline
+            \texttt{float64[6] qd} \newline
+            \texttt{float64[6] qdd} &
+            Estado articular completo: posición, velocidad y aceleración de las seis articulaciones. \\
+
+        \texttt{RobotState} &
+            \texttt{float64[6] q} \newline
+            \texttt{float64[6] qd} \newline
+            \texttt{float64[6] qdd} \newline
+            \texttt{float64[6] pose} &
+            Estado unificado del robot: estado articular más pose cartesiana del efector final $(x,y,z,\alpha,\beta,\gamma)$. \\
+
+        \texttt{ToolState} &
+            \texttt{float64[6] pose} &
+            Pose cartesiana de la herramienta $(x,y,z,\alpha,\beta,\gamma)$. Usada para comandar el movimiento del efector en modo \textit{teaching}. \\
+
+        \texttt{TeachingDelta} &
+            \texttt{float64 dx, dy, dz} \newline
+            \texttt{float64 droll, dpitch, dyaw} &
+            Incremento cartesiano solicitado desde la GUI para el movimiento manual del efector final. \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+\subsubsection*{Servicios}
+
+\begin{table}[H]
+    \centering
+    \caption{Servicios personalizados (\texttt{dr\_interfaces/srv}).}
+    \label{tab:ros2_srvs}
+    \renewcommand{\arraystretch}{1.3}
+    \begin{tabular}{l p{3.8cm} p{3.8cm} p{2.8cm}}
+        \toprule
+        \textbf{Servicio} & \textbf{Request} & \textbf{Response} & \textbf{Descripción} \\
+        \midrule
+        \texttt{SolveFK} &
+            \texttt{float64[6] q} &
+            \texttt{float64[6] pose} \newline \texttt{bool success} &
+            Cinemática directa. \\
+
+        \texttt{SolveIK} &
+            \texttt{float64[6] pose} \newline
+            \texttt{float64[6] q0} \newline
+            \texttt{bool force} &
+            \texttt{float64[6] q} \newline \texttt{bool success} &
+            Cinemática inversa analítica. \\
+
+        \texttt{GenTraj} &
+            \texttt{float64[] pose} \newline
+            \texttt{int8 mode} \newline
+            \texttt{int8 speed\_profile} &
+            \texttt{float64[] q\_traj} \newline
+            \texttt{int32 points} \newline
+            \texttt{bool success} &
+            Generación de trayectoria hacia una pose objetivo. \\
+
+        \texttt{SaveTraj} &
+            \texttt{string name} \newline
+            \texttt{float64[] q\_traj} \newline
+            \texttt{int32 points} &
+            \texttt{bool success} &
+            Persistencia de trayectoria en disco. \\
+
+        \texttt{LoadTraj} &
+            \texttt{string name} &
+            \texttt{float64[] q\_traj} \newline
+            \texttt{int32 points} \newline
+            \texttt{bool success} &
+            Carga de trayectoria desde disco. \\
+
+        \texttt{ListTrajs} &
+            --- &
+            \texttt{string[] names} \newline
+            \texttt{bool success} &
+            Lista de trayectorias almacenadas. \\
+
+        \texttt{DeleteTraj} &
+            \texttt{string name} &
+            \texttt{bool success} &
+            Eliminación de trayectoria del disco. \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+\subsubsection*{Acciones}
+
+\begin{table}[H]
+    \centering
+    \caption{Acción personalizada (\texttt{dr\_interfaces/action}).}
+    \label{tab:ros2_actions}
+    \renewcommand{\arraystretch}{1.3}
+    \begin{tabular}{l p{3.5cm} p{4cm} p{3.5cm}}
+        \toprule
+        \textbf{Acción} & \textbf{Goal} & \textbf{Feedback} & \textbf{Result} \\
+        \midrule
+        \texttt{Execute} &
+            \texttt{float64[] q\_traj} \newline
+            \texttt{int32 points} &
+            \texttt{float64[6] q, qd, qdd} \newline
+            \texttt{int32 point\_index} \newline
+            \texttt{float64 progress} &
+            \texttt{bool success} \newline
+            \texttt{string message} \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+% ======================================================================
+\subsection{Interrelación entre nodos}
+\label{sec:ros2_interrelacion}
+
+Los nodos del sistema se interrelacionan a través de cuatro flujos funcionales que operan de forma concurrente. A continuación se describe cada uno.
+
+\paragraph{Flujo de estado (permanente).}
+El \texttt{state\_node} es el nodo central del sistema: agrega toda la información de posición del robot y la redistribuye de forma unificada. Recibe el estado articular desde \texttt{executor\_node} a través del tópico \texttt{/dr/joint\_state}, y los comandos de pose de herramienta desde \texttt{teaching\_node} a través de \texttt{/dr/tool\_state}. Con esta información, llama al servicio \texttt{/dr/solve\_fk} del \texttt{fk\_node} para calcular la pose cartesiana actual y publica el estado completo del robot en \texttt{/dr/robot\_state}. Este tópico es consumido por \texttt{gui\_node}, \texttt{teaching\_node} y \texttt{gen\_traj\_node}. Paralelamente, el \texttt{joint\_state\_bridge\_node} convierte \texttt{/dr/robot\_state} al formato estándar \texttt{sensor\_msgs/JointState} en \texttt{/joint\_states}, que es consumido por el \texttt{robot\_state\_publisher} para mantener el árbol de transformaciones TF y habilitar la visualización en RViz.
+
+\paragraph{Flujo de movimiento manual (\textit{teaching}).}
+Cuando el operador acciona los controles de movimiento manual en la GUI, el \texttt{gui\_node} publica un incremento cartesiano en \texttt{/dr/teaching\_delta}. El \texttt{teaching\_node} recibe este incremento y, a partir de la pose actual disponible en \texttt{/dr/robot\_state}, calcula la nueva pose objetivo y la publica en \texttt{/dr/tool\_state}. El \texttt{state\_node} recibe esta actualización, resuelve la cinemática inversa llamando a \texttt{/dr/solve\_ik} del \texttt{ik\_node} para obtener la configuración articular correspondiente, y publica el nuevo \texttt{/dr/robot\_state}, cerrando el ciclo de realimentación hacia la GUI.
+
+\paragraph{Flujo de generación de trayectoria.}
+Cuando el operador solicita generar una trayectoria desde la GUI, el \texttt{gui\_node} invoca el servicio \texttt{/dr/gen\_traj} del \texttt{gen\_traj\_node}. Este último consulta \texttt{/dr/robot\_state} para obtener la configuración articular inicial del robot, y luego llama iterativamente a \texttt{/dr/solve\_ik} del \texttt{ik\_node} y a \texttt{/dr/solve\_fk} del \texttt{fk\_node} para resolver las configuraciones articulares de cada punto vía y verificar la trayectoria generada. La trayectoria resultante, codificada como vector aplanado, es devuelta al \texttt{gui\_node} en la respuesta del servicio.
+
+\paragraph{Flujo de ejecución de trayectoria.}
+Una vez disponible la trayectoria, el \texttt{gui\_node} envía un objetivo (\textit{goal}) a la acción \texttt{/dr/execute} del \texttt{executor\_node}. Este recorre la trayectoria articular punto a punto, publicando en cada paso el estado articular actual en \texttt{/dr/joint\_state}. El \texttt{state\_node} procesa estos valores, actualiza \texttt{/dr/robot\_state} y lo publica, de modo que tanto la GUI como RViz reflejan el movimiento en tiempo real. Simultáneamente, el \texttt{executor\_node} envía realimentación al cliente de la acción con la posición articular actual, el índice del punto en curso y el progreso normalizado de la ejecución.
+
+\paragraph{Flujo de gestión de trayectorias almacenadas.}
+El \texttt{gui\_node} interactúa directamente con el \texttt{storage\_node} mediante los servicios \texttt{/dr/save\_traj}, \texttt{/dr/load\_traj}, \texttt{/dr/list\_trajs} y \texttt{/dr/delete\_traj} para persistir, recuperar y administrar trayectorias en disco. El \texttt{storage\_node} no tiene dependencias con ningún otro nodo del sistema, lo que garantiza su operación independiente.
+
+% ======================================================================
+\subsection{Modelo URDF}
+\label{sec:ros2_urdf}
+
+El modelo del robot se describe en formato URDF (\textit{Unified Robot Description Format}) y se aloja en el paquete \texttt{robot\_description}. Su estructura fue derivada directamente de la parametrización Denavit-Hartenberg definida en la sección~\ref{sec:modelado_cinematico}, garantizando consistencia geométrica entre ambas representaciones.
+
+El árbol cinemático está compuesto por un eslabón raíz fijo (\texttt{world}), seis eslabones móviles (\texttt{link\_1} a \texttt{link\_6}) y un eslabón de herramienta (\texttt{tcp}), vinculados mediante seis articulaciones rotativas y una articulación fija. Cada articulación rotativa incorpora los parámetros de offset, traslación y rotación del eslabón correspondiente derivados de la tabla DH, de modo que la cadena cinemática resultante reproduce fielmente el modelo analítico. Las articulaciones 1 a 5 tienen límites de $\pm 2\pi$ rad ($\pm 360\degree$); la articulación 6 se declara de tipo \textit{continuous} en concordancia con el alcance libre definido en las especificaciones del robot.
+
+El offset de herramienta ($T_{\text{tool}}$) se incorpora como una articulación fija entre \texttt{link\_6} y \texttt{tcp}, con una traslación de 0.190~m en el eje $Z$, valor consistente con el parámetro \texttt{T\_tool} de \texttt{robot\_params.yml}.
+
+Cada eslabón incluye una geometría visual asociada a la malla STL correspondiente del modelo CAD desarrollado en \textit{Fusion 360} (sección~\ref{sec:CAD}). Los ejes de referencia de cada malla fueron alineados con los marcos DH durante el proceso de diseño, por lo que no fue necesario aplicar transformaciones adicionales entre el sistema de referencia cinemático y el visual.
+
+Esto puede verse en la siguiente imagen correspondiente al entorno de simulación RViz2:
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.85\linewidth]{rviz.png}
+    \caption{Modelo URDF visualizado en simulaodr RViz2.}
+    \label{fig:rviz}
+\end{figure}
+
+% ======================================================================
+\subsection{Cinemática}
+\label{sec:ros2_cinematica}
+
+La cinemática directa e inversa se porta al entorno ROS~2 preservando los algoritmos analíticos desarrollados en la sección~\ref{sec:cinematica}. Sin embargo, la \textit{Robotics Toolbox} de Peter Corke, utilizada en MATLAB para operaciones de álgebra matricial homogénea y conversión de representaciones de orientación, no está disponible en el entorno Python de ROS~2.
+
+Para resolver esta dependencia se implementó el módulo \colorbox{gray!20}{\texttt{transforms.py}}, alojado en el paquete \texttt{dr\_kinematics}. Este archivo replica las funciones del toolbox empleadas en el desarrollo, sin dependencias externas más allá de \texttt{numpy}:
+
+\begin{itemize}
+    \item \texttt{transl(x, y, z)}: matriz de transformación homogénea de traslación pura.
+    \item \texttt{trotx($\theta$)}, \texttt{troty($\theta$)}, \texttt{trotz($\theta$)}: rotaciones elementales alrededor de los ejes $X$, $Y$ y $Z$.
+    \item \texttt{inv\_T(T)}: inversa de una transformación homogénea, calculada eficientemente mediante $R^T$ y $-R^T\mathbf{p}$.
+    \item \texttt{rot\_to\_rpy(R)}: extrae los ángulos de Euler ZYX (roll, pitch, yaw) desde una matriz de rotación, equivalente a \texttt{tr2rpy} del toolbox.
+\end{itemize}
+
+Los parámetros cinemáticos del robot (tabla DH, límites articulares, transformaciones de base y herramienta) se cargan en tiempo de ejecución desde \texttt{robot\_params.yml}, sin estar codificados en los nodos. Esto permite ajustar el modelo cinemático sin recompilar el código.
+
+% ======================================================================
+\subsection{Generación de trayectorias}
+\label{sec:ros2_trayectorias}
+
+El módulo de generación de trayectorias se porta al nodo \texttt{gen\_traj\_node}, preservando los dos modos de interpolación: espacio articular (modo 0) y espacio cartesiano (modo 1), y el mecanismo de escalado de velocidades y aceleraciones descrito en la sección~\ref{sec:escalamiento_velocidades}.
+
+El servicio \texttt{/dr/gen\_traj} acepta \textbf{una única pose cartesiana objetivo} por solicitud, junto con el modo de interpolación y un perfil de velocidad (lento, medio o rápido). Al recibir la solicitud, el nodo obtiene la configuración articular actual desde \texttt{/dr/robot\_state} y genera la trayectoria desde esa configuración hasta el punto objetivo.
+
+Esta decisión de diseño introduce una \textbf{limitación respecto a la implementación en MATLAB}: en \texttt{gen\_traj.m}, la función recibía la lista completa de puntos vía y generaba una única trayectoria continua a través de todos ellos, aprovechando la capacidad de \texttt{mstraj} de interpolar sin detención en los puntos intermedios. En ROS~2, dado que el servicio acepta un solo punto por solicitud, cada llamada genera una trayectoria independiente con velocidad inicial y final nula. Como consecuencia, \textbf{el robot se detiene completamente en cada punto vía} antes de recibir la siguiente solicitud, lo que impide la interpolación fluida entre segmentos consecutivos.
+
+Esta limitación podría resolverse en el futuro rediseñando el servicio para aceptar una lista de puntos vía en una única solicitud, replicando el comportamiento de \texttt{mstraj} en el entorno ROS~2.
+
+% ======================================================================
+\subsection{Teaching}
+\label{sec:ros2_teaching}
+
+El modo \textit{teaching} permite desplazar el efector final de forma incremental desde la interfaz gráfica, capturando configuraciones intermedias que luego se encadenan para construir una trayectoria. El mecanismo se divide en dos componentes: el nodo de \textit{teaching} y la pestaña dedicada en la interfaz gráfica.
+
+\subsubsection*{Nodo de teaching}
+
+El \texttt{teaching\_node} actúa como un convertidor de desplazamientos relativos a poses absolutas. Al iniciarse, se suscribe a \texttt{/dr/robot\_state} para obtener y actualizar continuamente la configuración articular actual $\mathbf{q}_0$ y la pose cartesiana correspondiente $\mathbf{c}_0 = [x,\,y,\,z,\,r,\,p,\,y]^\top$.
+
+Cuando la interfaz gráfica publica un incremento en \texttt{/dr/teaching\_delta} --- mensaje \texttt{TeachingDelta} con campos \texttt{dx, dy, dz, droll, dpitch, dyaw} --- el nodo suma dicho incremento a $\mathbf{c}_0$ y publica la pose absoluta resultante en \texttt{/dr/tool\_state}:
+\[
+\mathbf{c}_{\text{objetivo}} = \mathbf{c}_0 + \Delta\mathbf{c}
+\]
+Este enfoque garantiza que cada desplazamiento sea relativo a la pose \textit{actual} del robot, independientemente de si el robot se ha movido entre pulsos de botón.
+
+\subsubsection*{Pestaña de teaching en la GUI}
+
+La pestaña \textit{Teaching} de la interfaz gráfica centraliza el flujo de trabajo de enseñanza de puntos. Su estructura es la siguiente:
+
+\begin{itemize}
+    \item \textbf{Tabla de estado actual.} Muestra en tiempo real la configuración articular $\mathbf{q}$ (en radianes) y la pose cartesiana $[x,y,z,\text{roll},\text{pitch},\text{yaw}]$ del efector final. Los valores se actualizan cada vez que el nodo recibe un mensaje en \texttt{/dr/robot\_state}.
+
+    \item \textbf{Controles de jog.} Para cada uno de los seis grados de libertad cartesianos (X, Y, Z, Roll, Pitch, Yaw) se dispone de un par de botones \texttt{+} y \texttt{--}. Al presionar cualquiera de ellos, la función \texttt{send\_delta(axis, sign)} construye un mensaje \texttt{TeachingDelta} con el incremento correspondiente al eje seleccionado y lo publica en \texttt{/dr/teaching\_delta}. El nodo de \textit{teaching} procesa el delta y publica la nueva pose objetivo en \texttt{/dr/tool\_state}, que a su vez el nodo de cinemática inversa resuelve y envía al estado del robot.
+
+    \item \textbf{Paso de jog (\textit{step}).} Un \textit{spinbox} configurable entre $0{,}001$ y $0{,}1$\,m/rad determina el módulo del incremento aplicado en cada pulsación. Este valor se utiliza directamente en \texttt{send\_delta}.
+
+    \item \textbf{Modo de interpolación y velocidad.} Un combo de modo (\textit{Articular} / \textit{Cartesiano}) y un combo de velocidad (\textit{Lento} / \textit{Medio} / \textit{Rápido}) acompañan cada waypoint capturado, de modo que la trayectoria resultante puede combinar segmentos con diferentes parámetros.
+
+    \item \textbf{Captura de posición.} El botón \textit{``Capturar posición''} lee la pose actual de la tabla de estado y la almacena en la lista interna de waypoints junto con el modo y la velocidad seleccionados en ese instante.
+
+    \item \textbf{Gestión de waypoints.} El botón \textit{``Ver lista de waypoints''} abre un diálogo (\texttt{WaypointDialog}) que muestra todos los puntos capturados. Desde este diálogo el usuario puede eliminar puntos individuales antes de confirmar la trayectoria.
+
+    \item \textbf{Finalización.} El campo de texto de nombre y el botón \textit{``Finalizar''} desencadenan el proceso de generación completo: se itera sobre la lista de waypoints llamando al servicio \texttt{/dr/gen\_traj} para cada par de puntos consecutivos, las trayectorias parciales se concatenan y el resultado se persiste en disco llamando al servicio \texttt{/dr/save\_traj}.
+\end{itemize}
+
+% ======================================================================
+\subsection{Interfaz gráfica}
+\label{sec:ros2_gui}
+
+La interfaz gráfica fue desarrollada con \textit{PyQt5} e integra en un único proceso tanto la lógica de comunicación con ROS~2 como la presentación visual. Para mantener la responsividad de la interfaz, el \textit{spin} de ROS~2 se ejecuta en un hilo demonio (\texttt{threading.Thread}), mientras que todas las actualizaciones de widgets se realizan mediante señales Qt (\texttt{pyqtSignal}), evitando accesos al hilo principal desde el hilo de ROS~2. Las llamadas a servicios, que son bloqueantes, se realizan también en hilos separados sincronizados mediante \texttt{threading.Event}.
+
+La ventana principal (\texttt{MainWindow}) se organiza en dos pestañas: \textit{Teaching} (descrita en la sección~\ref{sec:ros2_teaching}) y \textit{Ejecutar}.
+
+\subsubsection*{Pestaña de ejecución}
+
+La pestaña \textit{Ejecutar} permite cargar, recorrer y analizar trayectorias almacenadas. Sus componentes principales son:
+
+\begin{itemize}
+    \item \textbf{Tabla de estado actual.} Idéntica a la de la pestaña \textit{Teaching}: muestra $\mathbf{q}$ y la pose cartesiana en tiempo real.
+
+    \item \textbf{Tabla de trayectorias disponibles.} Cada fila corresponde a una trayectoria almacenada e incluye columnas de nombre, fecha de creación, número de puntos y dos acciones:
+        \begin{itemize}
+            \item \textit{Recorrer}: carga la trayectoria llamando a \texttt{/dr/load\_traj} y envía una solicitud a la acción \texttt{/dr/execute}. Durante la ejecución, la pestaña \textit{Teaching} se deshabilita para evitar conflictos.
+            \item \textit{Eliminar}: solicita confirmación al usuario y, de confirmarse, llama a \texttt{/dr/delete\_traj} y refresca la tabla.
+            \item \textit{Analizar}: habilitado únicamente tras ejecutar la trayectoria correspondiente. Abre el diálogo de análisis descrito a continuación.
+        \end{itemize}
+
+    \item \textbf{Barra de progreso y etiqueta de estado.} Se actualizan en tiempo real a partir de los mensajes de \textit{feedback} de la acción \texttt{/dr/execute}, que reportan el índice del punto en curso. Al completarse la acción, la etiqueta refleja el resultado (\textit{éxito} o \textit{error}).
+\end{itemize}
+
+A continuación, se presentan imágenes correspondientes a cada pestaña.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.85\linewidth]{gui_1.png}
+    \caption{Interfáz gráfica de usuario en ROS 2 - Pestaña de teaching.}
+    \label{fig:gui_1}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.85\linewidth]{gui_2.png}
+    \caption{Interfáz gráfica de usuario en ROS 2 - Pestaña de ejecución.}
+    \label{fig:gui_2}
+\end{figure}
+
+\subsubsection*{Diálogo de análisis}
+
+Al finalizar la ejecución de una trayectoria, el botón \textit{Analizar} abre el \texttt{AnalysisDialog}, un diálogo con cuatro pestañas de visualización:
+
+\begin{enumerate}
+    \item \textbf{Coordenadas articulares}: evolución temporal de $q_1, \ldots, q_6$ junto con los límites articulares $\pm q_{\max}$ y el perfil de velocidades y aceleraciones articulares con sus respectivos límites.
+    \item \textbf{Posición cartesiana del EF}: evolución de $x, y, z$ y los ángulos de Euler (roll, pitch, yaw) computados mediante cinemática directa.
+    \item \textbf{Velocidad y aceleración lineal}: norma de la velocidad y aceleración lineales del efector final, calculadas a través del Jacobiano geométrico, con comparativa frente a los límites $v_{\max}$ y $a_{\max}$.
+    \item \textbf{Velocidad y aceleración angular}: norma de la velocidad y aceleración angulares del efector final, con comparativa frente a $\omega_{\max}$ y $\alpha_{\max}$.
+\end{enumerate}
+
+El cálculo de cinemática directa para todas las muestras de la trayectoria se realiza en un hilo de fondo antes de renderizar los gráficos, de modo que la interfaz no se bloquea durante el proceso. Los gráficos se incrustan directamente en las pestañas del diálogo mediante \texttt{FigureCanvas} de \textit{Matplotlib}, sin abrir ventanas externas.
+
+La siguientes imágenes muestran las 4 pestañas de análisis:
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\linewidth]{gui_analisis_1.png}
+    \caption{Interfáz gráfica de usuario - Pestaña de análisis: evolución de coordenadas cartesianas del efector final y coordenadas articulares de articulaciones.}
+    \label{fig:gui_analisis_1}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\linewidth]{gui_analisis_2.png}
+    \caption{Interfáz gráfica de usuario - Pestaña de análisis: evolución de de velocidad articular y aceleración articular.}
+    \label{fig:gui_analisis_2}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\linewidth]{gui_analisis_3.png}
+    \caption{Interfáz gráfica de usuario - Pestaña de análisis: evolución de velocidad lineal y angular del efector final.}
+    \label{fig:gui_analisis_3}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\linewidth]{gui_analisis_4.png}
+    \caption{Interfáz gráfica de usuario - Pestaña de análisis: evolulución de aceleración lineal y angular del efector final.}    
+    \label{fig:gui_analisis_4}
+\end{figure}
+
+De la misma manera al análisis en MATLAB, se presentan los valores obtenido en conjunto con sus máximos definidos para poder verificar el funcionamiento.
+
+% ======================================================================
+\newpage
+\section{Conclusiones y trabajo futuro}
+\label{sec:conclusiones}
+
 
 % ======================================================================
 \newpage
 \begin{appendices}
-\section{Verificación y Validación de Módulos de Software de MATLAB}
+\section{Verificación y Validación de Módulos de Software de MATLAB y ROS~2}
 
 %====
 \subsection{Cinemática Inversa}
@@ -1373,7 +1828,7 @@ OK
 
 Para verificar que los patrones que conducen a singularidades determinados visualmente son correctos, se elabora el script \colorbox{gray!20}{\texttt{test\_singularities.m}}. En él se encuentra un ciclo \textit{while} infinito, solo terminable mediante finalización de ejecución. 
 
-Para la singularidad de codo y de muñeca, se definen valores aleatorios para todas las variables articulares que no estén involucradas en el patrón de la singularidad, para las que sí están involucradas, se define un valor aleatorio dentro del conjunto de aquellos valores que puedan provocar la singularidad según las condiciones definidas en \ref{sec:analisis_singularidades}.
+Para la singularidad de codo y de muñeca, se definen valores aleatorios para todas las variables articulares que no estén involucradas en el patrón de la singularidad, para las que sí están involucradas, se define un valor aleatorio dentro del conjunto de aquellos valores que puedan provocar la singularidad según las condiciones definidas en~\ref{sec:analisis_singularidades}.
 
 
 Para la singularidad de hombro, debido a la presencia de 3 incógnitas en una misma ecuación, simplemente se busca verificar la observación, para esto, se dan valores aleatorios dentro de un rango de $\pm10º$ y con signo opuesto para $q_2$ y $q_3$, finalmente se busca el valor de $q_4$ que cumpla con la condición de proyección nula. El motivo por el que los valores para $q_2$ y $q_3$ están dentro del rango $\pm10º$ y de signo opuesto, es para evitar que la proyección no sea anulable geométricamente mediante $q_4$.
@@ -1409,173 +1864,63 @@ Se definen manualmente una serie de puntos vía con sus respectivos modos de int
 \end{enumerate}
 
 %====
-\subsection{Nombre del Módulo 1}
-\label{ap:}
+\subsection{Integración en ROS~2}
+\label{ap:ros2_verificacion}
 
-%====
-\subsection{Nombre del Módulo 1}
-\label{ap:}
+La verificación del sistema en ROS~2 se realizó de forma progresiva a lo largo del desarrollo, probando cada nodo de forma aislada antes de integrarlo con el resto del sistema. La metodología consistió en llamar directamente a los servicios y tópicos desde la terminal, sin depender de la interfaz gráfica, lo que permitió validar cada componente de forma independiente y detectar errores de comunicación, serialización y lógica en etapas tempranas.
 
+A continuación se detallan los comandos más representativos utilizados durante este proceso:
 
-% ======================================================================
-\newpage
-\section{Códigos MATLAB}
-\label{ap:codigos}
+\begin{itemize}
 
-A continuación se presentan los códigos fuente de todos los scripts y módulos de desarrollo propio. Se excluyen los archivos de terceros ubicados en el directorio \colorbox{gray!20}{\texttt{third\_party/}}.
+    \item \textbf{Inspección del grafo de nodos y tópicos activos:}
+\begin{lstlisting}[language=bash, basicstyle=\footnotesize\ttfamily, breaklines=true, prebreak={}, postbreak={}]
+ros2 node list
+ros2 topic list
+ros2 service list
+\end{lstlisting}
 
-\medskip
-\noindent\textbf{Estructura del proyecto}
+    \item \textbf{Monitoreo del estado del robot en tiempo real} (pose articular y cartesiana publicada por el nodo de cinemática):
+\begin{lstlisting}[language=bash, basicstyle=\footnotesize\ttfamily, breaklines=true, prebreak={}, postbreak={}]
+ros2 topic echo /dr/robot_state
+\end{lstlisting}
 
-\begin{verbatim}
-matlab/
-├── main.m
-├── config.m
-├── flags.m
-├── models/
-│   └── robot_1.m
-├── modules/
-│   ├── gen_traj.m
-│   ├── ik_comparison.m
-│   ├── inv_kinematics.m
-│   ├── scale.m
-│   ├── sym_1.m
-│   └── tarea.m
-├── tests/
-│   ├── test_gen_traj.m
-│   ├── test_inv_kinematics.m
-│   ├── test_singularities.m
-│   └── test_workspace.m
-├── visualization/
-│   ├── grafQ.m
-│   ├── grafQaE.m
-│   ├── grafScaling.m
-│   └── myAnimate.m
-└── third_party/  (no incluido)
-\end{verbatim}
+    \item \textbf{Llamada al servicio de cinemática directa} con una configuración articular manual:
+\begin{lstlisting}[language=bash, basicstyle=\footnotesize\ttfamily, breaklines=true, prebreak={}, postbreak={}]
+ros2 service call /dr/solve_fk dr_interfaces/srv/SolveFK "{q:[0.0,0.5,-1.0,0.0,1.5,0.0]}"
+\end{lstlisting}
 
-\medskip
-\noindent\textbf{Interrelación entre módulos}
+    \item \textbf{Llamada al servicio de cinemática inversa} a partir de una pose cartesiana objetivo:
+\begin{lstlisting}[language=bash, basicstyle=\footnotesize\ttfamily, breaklines=true, prebreak={}, postbreak={}]
+ros2 service call /dr/solve_ik dr_interfaces/srv/SolveIK "{pose:[-0.22,0.3,0.2,0.01,3.1416,0.01],q0:[0.0,0.0,0.0,0.0,1.5708,0.0],force:false}"
+\end{lstlisting}
 
-\begin{figure}[H]
-    \centering
-    \includegraphics[width=0.85\linewidth]{DIAGRAMA_MODULOS.png}
-    \caption{Interrelación entre los módulos del proyecto MATLAB.}
-    \label{fig:interrelacion_scripts}
-\end{figure}
+    \item \textbf{Generación de una trayectoria} desde la configuración actual hasta un punto cartesiano objetivo:
+\begin{lstlisting}[language=bash, basicstyle=\footnotesize\ttfamily, breaklines=true, prebreak={}, postbreak={}]
+ros2 service call /dr/gen_traj dr_interfaces/srv/GenTraj "{pose:[0.0,0.3,0.25,0.01,3.1416,0.01],mode:1,speed_profile:1}"
+\end{lstlisting}
 
-\lstset{xleftmargin=2cm}
+    \item \textbf{Guardado y listado de trayectorias} en el nodo de almacenamiento:
+\begin{lstlisting}[language=bash, basicstyle=\footnotesize\ttfamily, breaklines=true, prebreak={}, postbreak={}]
+ros2 service call /dr/list_trajs dr_interfaces/srv/ListTrajs "{}"
+ros2 service call /dr/delete_traj dr_interfaces/srv/DeleteTraj "{name:'tarea_1'}"
+\end{lstlisting}
 
-%====
-\subsection{\texttt{main.m}}
-Punto de entrada del programa. Agrega al path todos los directorios del proyecto, inicializa el modelo del robot y, en función de las flags definidas en \colorbox{gray!20}{\texttt{flags.m}}, ejecuta los módulos habilitados.
+    \item \textbf{Envío de un delta de teaching} para verificar el desplazamiento incremental del efector final:
+\begin{lstlisting}[language=bash, basicstyle=\footnotesize\ttfamily, breaklines=true, prebreak={}, postbreak={}]
+ros2 topic pub --once /dr/teaching_delta dr_interfaces/msg/TeachingDelta "{dx:0.01,dy:0.0,dz:0.0,droll:0.0,dpitch:0.0,dyaw:0.0}"
+\end{lstlisting}
 
-\lstinputlisting[style=Matlab-editor, basicstyle=\small\ttfamily]{../matlab/main.m}
+    \item \textbf{Ejecución de una trayectoria} mediante la acción \texttt{/dr/execute}: el goal recibe la trayectoria aplanada \texttt{q\_traj} y el entero \texttt{points}, por lo que desde consola se combina con la carga previa vía \texttt{/dr/load\_traj}. El feedback reporta el índice del punto en curso y el progreso porcentual:
+\begin{lstlisting}[language=bash, basicstyle=\footnotesize\ttfamily, breaklines=true, prebreak={}, postbreak={}]
+ros2 action send_goal /dr/execute dr_interfaces/action/Execute "{q_traj:[...],points:N}" --feedback
+\end{lstlisting}
 
-%====
-\subsection{\texttt{flags.m}}
-Panel de control del flujo de ejecución. Define variables booleanas que determinan qué módulos se activan al correr \colorbox{gray!20}{\texttt{main.m}}, sin necesidad de modificar el programa principal.
+\end{itemize}
 
-\lstinputlisting[style=Matlab-editor, basicstyle=\small\ttfamily]{../matlab/flags.m}
-
-%====
-\subsection{\texttt{config.m}}
-Centraliza los parámetros del sistema: velocidades y aceleraciones máximas articulares y cartesianas, paso de tiempo de la trayectoria y otras constantes. Es consultado por los módulos que requieren estos valores.
-
-\lstinputlisting[style=Matlab-editor, basicstyle=\small\ttfamily]{../matlab/config.m}
-
-%====
-\subsection{\texttt{robot\_1.m}}
-Define el modelo cinemático del robot a partir de los parámetros Denavit-Hartenberg y genera el objeto \texttt{R} utilizado por todos los módulos del proyecto.
-
-\lstinputlisting[style=Matlab-editor, basicstyle=\small\ttfamily]{../matlab/models/robot_1.m}
-
-%====
-\subsection{\texttt{inv\_kinematics.m}}
-Implementa la solución analítica de cinemática inversa desarrollada en la sección \ref{sec:cinemática_inversa}. Dado un punto cartesiano objetivo, devuelve el conjunto completo de configuraciones articulares que lo alcanzan, incluyendo soluciones periódicas.
-
-\lstinputlisting[style=Matlab-editor, basicstyle=\small\ttfamily]{../matlab/modules/inv_kinematics.m}
-
-%====
-\subsection{\texttt{gen\_traj.m}}
-Genera la trayectoria completa del robot interpolando entre los puntos vía definidos. Para cada tramo determina el modo de interpolación (articular o cartesiano) y calcula el escalado de velocidades necesario para respetar los límites cinemáticos.
-
-\lstinputlisting[style=Matlab-editor, basicstyle=\small\ttfamily]{../matlab/modules/gen_traj.m}
-
-%====
-\subsection{\texttt{tarea.m}}
-Define y ejecuta la tarea de \textit{bin-to-bin transfer}: establece los puntos vía de la trayectoria, invoca al generador de trayectorias y lanza la animación del robot ejecutando el ciclo completo de la tarea.
-
-\lstinputlisting[style=Matlab-editor, basicstyle=\small\ttfamily]{../matlab/modules/tarea.m}
-
-%====
-\subsection{\texttt{ik\_comparison.m}}
-Permite comparar visualmente diferentes soluciones de cinemática inversa para una misma pose del efector final, animando cada configuración articular sobre el modelo CAD del robot.
-
-\lstinputlisting[style=Matlab-editor, basicstyle=\small\ttfamily]{../matlab/modules/ik_comparison.m}
-
-%====
-\subsection{\texttt{scale.m}}
-Escala los archivos STL exportados desde \textit{Fusion 360} para que sus dimensiones coincidan con las definidas en el modelo DH, garantizando la correcta visualización del robot en el entorno de simulación.
-
-\lstinputlisting[style=Matlab-editor, basicstyle=\small\ttfamily]{../matlab/modules/scale.m}
-
-%====
-\subsection{\texttt{sym\_1.m}}
-Realiza el desarrollo simbólico de las matrices de transformación homogénea para obtener, de forma simplificada, las expresiones algebraicas utilizadas en la resolución analítica de la cinemática inversa.
-
-\lstinputlisting[style=Matlab-editor, basicstyle=\small\ttfamily]{../matlab/modules/sym_1.m}
-
-%====
-\subsection{\texttt{test\_workspace.m}}
-Verifica el espacio de trabajo del robot generando configuraciones de máximo estiramiento y trazando la región alcanzable por el efector final. Los resultados se presentan en la sección \ref{sec:espacio_trabajo}.
-
-\lstinputlisting[style=Matlab-editor, basicstyle=\small\ttfamily]{../matlab/tests/test_workspace.m}
-
-%====
-\subsection{\texttt{test\_inv\_kinematics.m}}
-Verifica el correcto funcionamiento del módulo de cinemática inversa mediante las tres modalidades descritas en el Apéndice \ref{ap:IK}: verificación redundante, cálculo directo y verificación cíclica con puntos aleatorios.
-
-\lstinputlisting[style=Matlab-editor, basicstyle=\small\ttfamily]{../matlab/tests/test_inv_kinematics.m}
-
-%====
-\subsection{\texttt{test\_singularities.m}}
-Verifica que las configuraciones singulares identificadas analíticamente produzcan efectivamente pérdida de rango en el Jacobiano, para los tres tipos de singularidad: hombro, codo y muñeca.
-
-\lstinputlisting[style=Matlab-editor, basicstyle=\small\ttfamily]{../matlab/tests/test_singularities.m}
-
-%====
-\subsection{\texttt{test\_gen\_traj.m}}
-Verifica el generador de trayectorias ejecutando casos de prueba predefinidos y animando el resultado sobre el modelo CAD del robot.
-
-\lstinputlisting[style=Matlab-editor, basicstyle=\small\ttfamily]{../matlab/tests/test_gen_traj.m}
+Este flujo de verificación incremental garantizó que cada nodo cumpliera su contrato de interfaz antes de ser integrado al sistema completo, reduciendo significativamente el tiempo de depuración en las etapas de integración.
 
 
-%====
-\subsection{\texttt{myAnimate.m}}
-Genera la animación 3D del robot en tres paneles sincronizados: posiciones articulares con zonas de advertencia cerca de los límites, modelo CAD del robot en movimiento, y número de condición del jacobiano para detectar proximidad a singularidades.
-
-\lstinputlisting[style=Matlab-editor, basicstyle=\small\ttfamily]{../matlab/visualization/myAnimate.m}
-
-%====
-\subsection{\texttt{grafQ.m}}
-Grafica la evolución temporal de las coordenadas articulares, velocidades y aceleraciones a lo largo de una trayectoria, permitiendo verificar visualmente el cumplimiento de los límites cinemáticos.
-
-\lstinputlisting[style=Matlab-editor, basicstyle=\small\ttfamily]{../matlab/visualization/grafQ.m}
-
-%====
-\subsection{\texttt{grafQaE.m}}
-Calcula y grafica la posición, velocidad y aceleración cartesianas del efector final a lo largo de la trayectoria, obtenidas mediante cinemática directa y diferenciación numérica de la trayectoria articular.
-
-\lstinputlisting[style=Matlab-editor, basicstyle=\small\ttfamily]{../matlab/visualization/grafQaE.m}
-
-%====
-\subsection{\texttt{grafScaling.m}}
-Compara las trayectorias antes y después del escalamiento, graficando velocidades articulares y magnitudes cartesianas (velocidad lineal, aceleración lineal, velocidad angular y aceleración angular) junto con sus límites admisibles, para verificar que el reescalado elimina las violaciones.
-
-\lstinputlisting[style=Matlab-editor, basicstyle=\small\ttfamily]{../matlab/visualization/grafScaling.m}
-
-\end{appendices}
 % ======================================================================
 \newpage
 % BIBLIOGRAFÍA
@@ -1656,5 +2001,6 @@ Jesse H. Hyman.
 Packt, 2018.
 \end{thebibliography}
 
+\end{appendices}
 
 \end{document}

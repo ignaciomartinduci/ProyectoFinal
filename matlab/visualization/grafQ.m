@@ -1,66 +1,62 @@
-function [] = grafQ(q_traj, qd_traj, qdd_traj)
+function [] = grafQ(R, q_traj, qdmax, qddmax)
 
 cfg = config;
-dt = cfg.traj_dt;
+dt  = cfg.traj_dt;
+N   = size(q_traj, 1);
+t   = (0:N-1)' * dt;
 
-t = 1:size(q_traj,1);
-t = t*dt;
+% Derivadas numéricas
+qd_traj  = zeros(N, 6);
+qdd_traj = zeros(N, 6);
+for j = 1:6
+    qd_traj(:,j)  = gradient(q_traj(:,j),    dt);
+    qdd_traj(:,j) = gradient(qd_traj(:,j), dt);
+end
 
-step = 10;
+labels = {'q1','q2','q3','q4','q5','q6'};
 
+%% ===== FIGURA 1: Posiciones articulares + límites =====
 
-%% ===== POSICION =====
 figure;
-hold on
-subplot(6,1,1)
-plot(t, q_traj(:,1)); ylabel('q1 [rad]'); grid minor;
-subplot(6,1,2)
-plot(t, q_traj(:,2)); ylabel('q2 [rad]'); grid minor;
-subplot(6,1,3)
-plot(t, q_traj(:,3)); ylabel('q3 [rad]'); grid minor;
-subplot(6,1,4)
-plot(t, q_traj(:,4)); ylabel('q4 [rad]'); grid minor;
-subplot(6,1,5)
-plot(t, q_traj(:,5)); ylabel('q5 [rad]'); grid minor;
-subplot(6,1,6)
-plot(t, q_traj(:,6)); ylabel('q6 [rad]'); xlabel('Tiempo'); grid minor;
-sgtitle("q_{traj}")
-hold off
+sgtitle('Posiciones articulares');
+for j = 1:6
+    subplot(6,1,j);
+    hold on;
+    plot(t, q_traj(:,j), 'b');
+    yline(R.qlim(j,1), 'r--');
+    yline(R.qlim(j,2), 'r--');
+    ylabel([labels{j} ' [rad]']);
+    grid minor; xlim([t(1) t(end)]);
+    if j == 6, xlabel('t [s]'); end
+    hold off;
+end
 
-%% ===== VELOCIDAD =====
-figure;
-hold on
-subplot(6,1,1)
-plot(t, qd_traj(:,1)); ylabel('qd1 [rad/s]'); grid minor;
-subplot(6,1,2)
-plot(t, qd_traj(:,2)); ylabel('qd2 [rad/s]'); grid minor;
-subplot(6,1,3)
-plot(t, qd_traj(:,3)); ylabel('qd3 [rad/s]'); grid minor;
-subplot(6,1,4)
-plot(t, qd_traj(:,4)); ylabel('qd4 [rad/s]'); grid minor;
-subplot(6,1,5)
-plot(t, qd_traj(:,5)); ylabel('qd5 [rad/s]'); grid minor;
-subplot(6,1,6)
-plot(t, qd_traj(:,6)); ylabel('qd6 [rad/s]'); xlabel('Tiempo'); grid minor;
-sgtitle("qd_{traj}")
-hold off
+%% ===== FIGURA 4: Velocidades y aceleraciones articulares + límites =====
 
-%% ===== ACELERACION =====
 figure;
-hold on
-subplot(6,1,1)
-plot(t, qdd_traj(:,1)); ylabel('qdd1 [rad/s^2]'); grid minor;
-subplot(6,1,2)
-plot(t, qdd_traj(:,2)); ylabel('qdd2 [rad/s^2]'); grid minor;
-subplot(6,1,3)
-plot(t, qdd_traj(:,3)); ylabel('qdd3 [rad/s^2]'); grid minor;
-subplot(6,1,4)
-plot(t, qdd_traj(:,4)); ylabel('qdd4 [rad/s^2]'); grid minor;
-subplot(6,1,5)
-plot(t, qdd_traj(:,5)); ylabel('qdd5 [rad/s^2]'); grid minor;
-subplot(6,1,6)
-plot(t, qdd_traj(:,6)); ylabel('qdd6 [rad/s^2]'); xlabel('Tiempo'); grid minor;
-sgtitle("qdd_{traj}")
-hold off
+sgtitle('Velocidades y aceleraciones articulares');
+for j = 1:6
+
+    subplot(6,2, 2*j-1);
+    hold on;
+    plot(t, qd_traj(:,j), 'b');
+    yline( qdmax(j), 'r--');
+    yline(-qdmax(j), 'r--');
+    ylabel(['$\dot{q}_' num2str(j) '$ [rad/s]'], 'Interpreter', 'latex');
+    grid minor; xlim([t(1) t(end)]);
+    if j == 6, xlabel('t [s]'); end
+    hold off;
+
+    subplot(6,2, 2*j);
+    hold on;
+    plot(t, qdd_traj(:,j), 'b');
+    yline( qddmax(j), 'r--');
+    yline(-qddmax(j), 'r--');
+    ylabel(['$\ddot{q}_' num2str(j) '$ [rad/s$^2$]'], 'Interpreter', 'latex');
+    grid minor; xlim([t(1) t(end)]);
+    if j == 6, xlabel('t [s]'); end
+    hold off;
+
+end
 
 end

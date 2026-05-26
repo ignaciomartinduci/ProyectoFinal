@@ -126,6 +126,7 @@ bar_h     = 0.65;     % Altura visual de cada barra articular (en unidades del e
 %   ax_robot:  centro          (62% del ancho)
 %   ax_bar:    franja derecha  (13% del ancho, centrada verticalmente)
 figure;
+set(gcf, 'Renderer', 'opengl');   % aceleración por hardware para las mallas STL
 ax_joints = axes('Position', [0.01 0.06 0.13 0.86]);
 ax_robot  = axes('Position', [0.16 0.06 0.62 0.86]);
 ax_bar    = axes('Position', [0.83 0.22 0.13 0.62]);
@@ -292,7 +293,9 @@ hWarn = text(ax_bar, 0.5, 0.65, '! SINGULAR', ...
 % Nota: se usa set() para modificar propiedades de handles existentes en lugar
 % de borrar y recrear objetos gráficos, lo que es mucho más rápido (~10×).
 for i = 1:N
-    
+
+    t_frame = tic;   % marca inicio del frame para controlar el timing real
+
     % Mueve el robot al frame i en el panel central
     R.animate(q_sub(i,:));
     
@@ -332,8 +335,14 @@ for i = 1:N
         set(hWarn, 'Visible', 'off');
     end
     
-    drawnow;                % flushea el pipeline gráfico de MATLAB
-    pause(cfg.anim_dt);    % espera 1/30 s para mantener anim_fps = 30 Hz
+    drawnow;
+
+    % Pausa solo el tiempo restante del presupuesto del frame.
+    % Si el render tardó más que anim_dt, no pausa y el loop sigue de inmediato.
+    remaining = cfg.anim_dt - toc(t_frame);
+    if remaining > 0
+        pause(remaining);
+    end
 end
 
 end % myAnimate

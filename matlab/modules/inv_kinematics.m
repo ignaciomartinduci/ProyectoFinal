@@ -815,10 +815,6 @@ function q_mejor = costo_simple(q_previo, ampl_all_sol, all_sol, pose_config)
 q_mejor = q_previo;
 costo_mejor = inf;
 
-disp(q_previo)
-disp(all_sol)
-disp(pose_config)
-
 if pose_config == "FORCE"
     
     for  i = 1:size(all_sol,1)
