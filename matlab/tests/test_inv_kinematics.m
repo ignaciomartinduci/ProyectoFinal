@@ -27,13 +27,13 @@ beta_tik = rpy_tik(2);
 gamma_tik = rpy_tik(3);
 
 % override
-x_tik = 0.1;
-y_tik = 0.2;
-z_tik = 0.1;
+x_tik = -0.202;
+y_tik = 0.333;
+z_tik = 0.205;
 % %
-alpha_tik = 0.4;
-beta_tik = 0.5;
-gamma_tik = 0.6;
+alpha_tik = -3.132;
+beta_tik = -0.01;
+gamma_tik = -3.132;
 
 coordenadas_cartesianas = "x = "+string(x_tik)+" | y = "+string(y_tik)+" | z = "+string(z_tik)+" | alpha = "+string(alpha_tik)+" | beta = "+string(beta_tik)+" | gamma = "+string(gamma_tik);
 
@@ -80,6 +80,53 @@ disp(q_mejor)
 %% IMPRESIÓN DE SOLUCIONES
 
 % solutions(R, sol_tik);
+
+%% RESUMEN ESTADÍSTICO
+
+disp(" ")
+disp("--- Resumen estadístico IK (poses aleatorias) ---")
+
+N_batch   = 300;
+err_tol   = 1e-3;   % [m] umbral para considerar solución válida
+n_ok      = 0;
+n_sin_sol = 0;
+err_pos_v = [];
+err_ang_v = [];
+q_ref     = zeros(1,6);
+
+for k = 1:N_batch
+    q_rand = zeros(1,6);
+    for j = 1:6
+        q_rand(j) = R.qlim(j,1) + (R.qlim(j,2) - R.qlim(j,1)) * rand;
+    end
+
+    T_tgt = double(R.fkine(q_rand));
+    rpy   = tr2rpy(T_tgt, 'zyx');
+
+    [ampl_sol, q_mejor] = inv_kinematics(T_tgt(1,4), T_tgt(2,4), T_tgt(3,4), ...
+        rpy(1), rpy(2), rpy(3), q_ref, false, R, "NONE");
+
+    if size(ampl_sol, 1) >= 64
+        T_check = double(R.fkine(q_mejor));
+        ep = norm(T_check(1:3,4) - T_tgt(1:3,4));
+        ea = acos(min(1, max(-1, (trace(T_check(1:3,1:3)' * T_tgt(1:3,1:3)) - 1) / 2)));
+        if ep < err_tol
+            n_ok = n_ok + 1;
+            err_pos_v(end+1) = ep; %#ok<AGROW>
+            err_ang_v(end+1) = ea; %#ok<AGROW>
+        end
+    else
+        n_sin_sol = n_sin_sol + 1;
+    end
+end
+
+fprintf("  Poses testeadas:    %d\n",           N_batch)
+fprintf("  Sin solución IK:    %d\n",           n_sin_sol)
+fprintf("  Poses verificadas:  %d  (%.1f%%)\n", n_ok, 100*n_ok/N_batch)
+if ~isempty(err_pos_v)
+    fprintf("  Error posición    — max: %.2e m    prom: %.2e m\n",   max(err_pos_v), mean(err_pos_v))
+    fprintf("  Error orientación — max: %.2e rad  prom: %.2e rad\n", max(err_ang_v), mean(err_ang_v))
+end
 
 %% LOOP TESTING
 

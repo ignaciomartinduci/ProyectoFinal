@@ -10,6 +10,7 @@
 % \usepackage{cite}
 \usepackage{graphicx}
 \usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
 \usepackage{amsmath,amssymb,amsfonts}
 \usepackage{algorithmic}
 \usepackage{textcomp}
@@ -33,6 +34,16 @@
 \usepackage{minted}
 \usepackage{listings}
 \usepackage[table]{xcolor}
+% Soporte de caracteres acentuados del español dentro de lstlisting
+\lstset{
+  literate=
+    {á}{{\'{a}}}1 {é}{{\'{e}}}1 {í}{{\'{i}}}1 {ó}{{\'{o}}}1 {ú}{{\'{u}}}1
+    {Á}{{\'{A}}}1 {É}{{\'{E}}}1 {Í}{{\'{I}}}1 {Ó}{{\'{O}}}1 {Ú}{{\'{U}}}1
+    {ñ}{{\~{n}}}1 {Ñ}{{\~{N}}}1
+    {ü}{{\”u}}1 {Ü}{{\”U}}1
+    {¿}{{?`}}1 {¡}{{!`}}1
+}
+
 \setlength{\headheight}{26pt} % ajusta si sale el warning “\headheight too small”
 \definecolor{L-BLUE-1}{HTML}{5082CF}  
 
@@ -50,7 +61,7 @@
       % ----- minipage izquierda -----
       \begin{minipage}[b]{0.30\textwidth}
         \raggedright
-        UNCUYO -- Ing.\ Mecatrónica\\
+        UNCUYO ---Ing.\ Mecatrónica\\
         Mendoza - Argentina
       \end{minipage}
       \hfill
@@ -86,10 +97,10 @@
 \title{Diseño y simulación de un robot manipulador serial de seis grados de libertad para automatización logística.}
 
 % Autores
-\author{Ignacio Martín Duci \\ ignacio8martin@gmail.com \\ \\ Proyecto Final de Estudios (00441),\\ Facultad de Ingeniería, \\ Universidad Nacional de Cuyo, \\ \,\\Mendoza, Argentina}
+\author{Ignacio Martín Duci \\ ignacio8martin@gmail.com \\ \\ Proyecto Final de Estudios (00441),\\ Facultad de Ingeniería, \\ Universidad Nacional de Cuyo, \\ \,\\Mendoza, Argentina \\ \\ Director: Ing. Eric Sánchez}
 
 % Fecha
-\date{Mayo 2026, versión v003 \\ \vspace{0.3em} \textit{Presentación parcial del Proyecto Final de Estudios para evaluación de avances}}
+\date{Junio 2026}
 
 
 % Cuerpo del documento
@@ -102,13 +113,34 @@
 \maketitle
 % ======================================================================
 \newpage
-\section*{Agradecimientos}
-[completar]
+\section*{Resumen}
+
+Se presenta el diseño y la simulación de un robot manipulador serial de seis grados de libertad orientado a la automatización de procesos logísticos, específicamente a la transferencia de objetos entre contenedores (\textit{bin-to-bin transfer}). La motivación surge del crecimiento sostenido del mercado de robótica para depósitos, con tasas de expansión proyectadas entre el 17\,\% y el 22\,\% anual para Latinoamérica, región que presenta las mayores oportunidades relativas de automatización.
+
+El desarrollo cubre el ciclo completo desde el modelado hasta la integración en software de robótica: se formula la cinemática directa mediante la convención Denavit-Hartenberg, se obtiene una solución analítica cerrada de la cinemática inversa con hasta 512 configuraciones articulares válidas, y se caracteriza el espacio de trabajo y las singularidades geométricas del manipulador (hombro, codo y muñeca). Sobre esta base se implementa un módulo de generación de trayectorias con interpolación en espacio articular y cartesiano, y escalado automático de velocidades y aceleraciones para respetar los límites cinemáticos. Los modelos CAD de cada eslabón se diseñaron en \textit{Fusion 360} y se integraron como mallas STL al entorno de simulación en MATLAB con la \textit{Robotics Toolbox} de Peter Corke. Finalmente, la cinemática y la generación de trayectorias se portaron a \textit{Robot Operating System 2} (ROS~2), construyendo una arquitectura de nodos con interfaces personalizadas, modelo URDF, visualización en RViz2 e interfaz gráfica de usuario desarrollada en PyQt5.
+
+La simulación de la tarea completa de \textit{bin-to-bin transfer} confirma el cumplimiento de los límites cinemáticos impuestos y la coherencia entre los modelos MATLAB y ROS~2.
+
+\medskip
+\noindent\textbf{Palabras clave:} robot manipulador serial, seis grados de libertad, Denavit-Hartenberg, cinemática inversa analítica, planificación de trayectorias, Jacobiano geométrico, singularidades, MATLAB, Robotics Toolbox, Peter Corke, Fusion~360, ROS~2, URDF, RViz2, PyQt5, automatización logística, simulación robótica.
 
 % ======================================================================
 \newpage
-\section*{Resumen}
-[completar]
+\section*{Agradecimientos}
+
+A la Facultad de Ingeniería de la Universidad Nacional de Cuyo, por los espacios de estudio y formación brindados. A sus docentes, por transmitir no solo conocimientos técnicos, sino también la pasión por la ingeniería.
+
+\bigskip
+
+A mi director, el Ing. Eric Sánchez, por acompañarme a lo largo de todo este proyecto con dedicación y generosidad. Por guiarme cuando el camino no era claro, por motivarme en los momentos difíciles, por confiar en el proyecto incluso antes de que tomara forma, y por el tiempo que destinó con genuino interés.
+
+\bigskip
+
+A mi familia y amigos, por estar presentes en cada etapa de esta carrera y en mi vida. Por el sostén incondicional, por celebrar cada logro como propio y por las horas compartidas dentro y fuera de la facultad. Su compañía fue, y es, indispensable.
+
+\bigskip
+
+A Dios.
 
 % ======================================================================
 \newpage
@@ -140,7 +172,7 @@ El desarrollo desde cero de un robot tipo serie de seis grados de libertad prese
 \subsection{Propuesta}
 \label{sec:propuesta}
 
-En el presente trabajo se desarrolla el diseño y la simulación de un robot manipulador serial de seis grados de libertad orientado a una aplicación específica: la transferencia de objetos entre contenedores (\textit{bin-to-bin transfer}) de hasta 3 kg.
+En el presente trabajo se desarrolla el diseño y la simulación de un robot manipulador serial de seis grados de libertad orientado a una aplicación específica: la transferencia de objetos entre contenedores (\textit{bin-to-bin transfer}).
 
 Esta aplicación se plantea como un caso representativo dentro de procesos de manipulación en depósitos logísticos automatizados (\textit{micro-fulfillment warehouses}), permitiendo validar el desempeño del sistema en tareas típicas de pick-and-place.
 
@@ -155,7 +187,7 @@ En la figura \ref{fig:aplicacion-vista-superior} puede verse un esquema de la ap
     \label{fig:aplicacion-vista-superior}
 \end{figure}
 
-Mínimamente, se propone que el robot tenga un alcance de 500 mm con una capacidad de carga útil de hasta 3 kg, similar a las características del robot comercial \href{https://www.universal-robots.com/products/ur3e?utm_source=chatgpt.com}{UR3e}. En la figura \ref{fig:robot} se puede ver un esquema general de la morfología del robot.
+Mínimamente, se propone que el robot tenga un alcance de 500 mm, similar a las características del robot comercial \href{https://www.universal-robots.com/products/ur3e?utm_source=chatgpt.com}{UR3e}. En la figura \ref{fig:robot} se puede ver un esquema general de la morfología del robot.
 
 \begin{figure}[H]
     \centering
@@ -178,7 +210,6 @@ La tarea del robot consiste cronológicamente en lo siguiente:
     \item Repetir.
 \end{enumerate}
 
-Dentro de la bibliografía a consultar inicialmente se mencionan los libros \cite{craig2021}, \cite{corke2023}, \cite{ashby2022}, \cite{bathe2006}, \cite{krishnan2017}, \cite{martinez2024} y \cite{hyman2018}.
 
 
 
@@ -195,13 +226,13 @@ Dentro de la bibliografía a consultar inicialmente se mencionan los libros \cit
 \label{sec:objetivos}
 
 \,\\
-\textbf{Objetivo mínimo:} Diseñar y simular un robot manipulador de seis ejes tipo serie con 500 mm de alcance y 3 kg de carga útil destinado a tareas de \textit{bin-to-bin transfer} capaz de mover 300 elementos por hora.
+\textbf{Objetivo mínimo:} Diseñar y simular un robot manipulador de seis ejes tipo serie con 500 mm de alcance destinado a tareas de \textit{bin-to-bin transfer} capaz de mover 300 elementos por hora.
 
 Los siguientes objetivos se desarrollan en dos etapas: los ítems 1 a 6 corresponden a la implementación y validación en entorno MATLAB, mientras que los ítems subsiguientes se desarrollan en el entorno ROS 2.
 
 \begin{enumerate}
 
-    \item Definir las especificaciones del robot y su tarea con un primer acercamiento hacia las normas de seguridad de máquinas, robótica y colaboración humano-máquina.
+    \item Definir las especificaciones del robot y su tarea.
     \item Realizar un diseño conceptual preliminar.
     \item Analizar y validar el espacio de trabajo. 
     \item Resolver analíticamente y validar la cinemática inversa.
@@ -217,7 +248,7 @@ Los siguientes objetivos se desarrollan en dos etapas: los ítems 1 a 6 correspo
 \end{enumerate}
 
 
-\\\,\\
+\medskip
 \textbf{Posibles beneficiarios: }
 \begin{enumerate}
     \item \textbf{Bodegas y agro-industria mendocina} que requieren automatizar el empaque y la manipulación de insumos sin invertir en robots industriales de alto costo.
@@ -249,21 +280,25 @@ La tarea del manipulador consiste en la transferencia de objetos entre dos conte
 
 Los objetos serán tomados mediante un sistema de sujeción por vacío (ventosa - \textit{vacuum gripper}) y depositados mediante la liberación del mismo, esto permite relajar los requerimientos de precisión y repetibilidad del manipulador.
 
-Quedan definidas las especificaciones principales del manipulador en función de la tarea descrita\footnote{Se considera un alcance y una capacidad de carga superiores a los requeridos por la tarea, con el fin de incorporar un margen de diseño que garantice un funcionamiento adecuado del sistema y permita su adaptación a tareas similares.}:
+\subsection*{Especificaciones del proyecto}
+
+Quedan definidas las especificaciones del manipulador que son objeto del presente trabajo:
 
 \begin{itemize}
+    \item Grados de libertad (GDL - \textit{DOF}): 6.
     \item Alcance: 500.00 mm
+    \item Rango articulaciones 1 a 5: $\pm2\pi$
+    \item Rango articulación final: \textit{libre}
+\end{itemize}
+
+\subsection*{Especificaciones para posible extensión del proyecto}
+
+Las siguientes especificaciones quedan definidas como referencia para desarrollos posteriores que aborden el diseño mecánico, el control de fuerza y la integración con el entorno físico:
+
+\begin{itemize}
     \item Capacidad de carga útil: 3.00 kg
     \item Precisión: 0.5 mm
     \item Repetibilidad: 0.5 mm
-    \item Grados de libertad (GDL - \textit{DOF}): 6.
-    \item Rango articulaciones 1:5 $\pm2\pi$
-    \item Rango articulación final \textit{libre}
-\end{itemize}
-
-Se definen también otras especificaciones y condiciones del entorno, posiblemente útiles para desarrollos posteriores:
-
-\begin{itemize}
     \item Temperatura ambiente entre 5 y 35 ºC.
     \item Humedad relativa $\leq 70\%$.
     \item Bajo nivel de polvo ambiental.
@@ -1160,7 +1195,7 @@ Si $k = 1$ no existe ninguna violación y la trayectoria preliminar es válida.
 Si $k > 1$, se regenera la trayectoria con el tiempo extendido. En el caso de interpolación articular (\texttt{mstraj}), esto equivale a reducir los límites de velocidad articular a $\dot{\mathbf{q}}_{\max}/k$ y extender el tiempo de rampa a $t_{\mathrm{acc}} \cdot k$, con lo que la trayectoria resultante cumple todos los límites. En el caso de interpolación cartesiana, simplemente se extiende el tiempo total a $t_f$ a $k \cdot t_f$ y se regenera la ley de movimiento quintic. En este modo existe además una estimación inicial de $t_f$ basada en las propiedades analíticas del perfil quintic empleado, que sirve como punto de partida para la verificación posterior.
 
 
-La validación del funcionamiento del escalamiento de velocidades se presenta en el Apéndice~\ref{ap:generacion_trayectorias}.
+El resultado del escalamiento aplicado, incluyendo la comparativa entre los perfiles de velocidad antes y después del proceso tanto en el espacio articular como en el cartesiano, se presenta en el Apéndice~\ref{ap:generacion_trayectorias} (figuras~\ref{fig:verif_gen_traj_vel} y \ref{fig:verif_gen_traj_vel_cart}).
 
 
 
@@ -1257,7 +1292,7 @@ El eslabón 5 no presenta decisiones de diseño particulares más allá de las c
     \label{fig:cad_eslabon5}
 \end{figure}
 
-\subsubsection{Eslabón 6 -- Herramienta}
+\subsubsection{Eslabón 6 ---Herramienta}
 
 El eslabón 6 corresponde a la herramienta del sistema y no presenta decisiones de diseño particulares más allá de las consideraciones generales de la sección.
 
@@ -1342,7 +1377,7 @@ A continuación, se presenta una imagen luego de la simulación:
 \end{figure}
 
 En la imagen puede verse el recorrido del robot, el cual ha dejado una traza roja de la posición del efector final. En el inicio de la trayectoria puede verse una maniobra que busca posicionar al robot en el llamado punto medio bajo una configuración articular geométrica lo que beneficiará el comportamiento posterior dado que se comenzará lejos de los límites articulares.
-A los costados del robot, pueden verse gráficas animadas de la posición instantánea de cada articulación y del valor instantáneo del jacobiano lo que permite evaluar diferentes trayectoriaas.
+A los costados del robot pueden verse gráficas animadas: a la izquierda, la posición instantánea de cada articulación, y a la derecha, el valor instantáneo del jacobiano, lo que permitiría evaluar posibles mejoras en la trayectoria generada.
 
 Luego de la simulación, se obtienen las siguientes gráficas para el análisis de las variables cinemáticas tanto del efector final como de las articulaciones, puede notarse que no se sobrepasan significativamente límites cinemáticos:
 
@@ -1760,9 +1795,137 @@ De la misma manera al análisis en MATLAB, se presentan los valores obtenido en 
 
 % ======================================================================
 \newpage
+\section{Verificación de productividad en entorno ROS~2}
+\label{sec:verificacion_productividad}
+
+Con el objetivo de evaluar el desempeño del sistema desarrollado, se busca verificar que el robot sea capaz de cumplir con el objetivo de productividad establecido: 300 transferencias por hora, lo que equivale a un período de ciclo de 12 segundos por transferencia. Para ello, se utiliza el sistema de \textit{teaching} implementado en ROS~2 para describir la trayectoria completa de la tarea, ejecutarla en el entorno de simulación y analizar las variables cinemáticas resultantes.
+
+%
+% ============
+%
+\subsection{Etapa 1: \textit{Teaching} de la trayectoria}
+\label{sec:verif_teaching}
+
+Utilizando la interfaz de \textit{teaching} implementada con PyQt5, se capturan los nueve puntos vía que describen un ciclo completo de la tarea del robot. La figura~\ref{fig:verif_posturas} muestra las nueve posturas del manipulador correspondientes a cada punto capturado.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.85\linewidth]{verif_posturas.png}
+    \caption{Nueve posturas del robot correspondientes a un ciclo completo de la tarea.}
+    \label{fig:verif_posturas}
+\end{figure}
+
+Los puntos vía capturados describen el ciclo de la siguiente manera:
+
+\begin{enumerate}
+    \item \textbf{Postura de punto medio} --- configuración inicial del ciclo, utilizada como postura de espera segura y alejada de los límites articulares.
+    \item \textbf{Postura sobre caja de \textit{picking}} --- el efector final se posiciona por encima de la caja de origen, previo al descenso.
+    \item \textbf{Postura dentro de caja de \textit{picking}} --- el efector desciende al interior de la caja de origen para realizar la toma del objeto.
+    \item \textbf{Postura sobre caja de \textit{picking}} --- el efector retorna a la posición elevada sobre la caja de origen con el objeto tomado.
+    \item \textbf{Postura de punto medio (intermedia)} --- el robot transita por el punto medio para garantizar una trayectoria libre de interferencias entre origen y destino.
+    \item \textbf{Postura sobre caja de \textit{placement}} --- el efector se posiciona por encima de la caja de destino, previo al descenso.
+    \item \textbf{Postura dentro de caja de \textit{placement}} --- el efector desciende al interior de la caja de destino para depositar el objeto.
+    \item \textbf{Postura sobre caja de \textit{placement}} --- el efector retorna a la posición elevada sobre la caja de destino.
+    \item \textbf{Postura de punto medio (final)} --- el robot regresa a la postura de espera, completando el ciclo.
+\end{enumerate}
+
+La figura~\ref{fig:verif_waypoints} muestra la lista de puntos vía cartesianos registrados en la interfaz, con su posición, modo de interpolación y perfil de velocidad de llegada.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.85\linewidth]{verif_waypoints.png}
+    \caption{Lista de puntos vía cartesianos capturados mediante \textit{teaching}, con modo de interpolación y velocidad de llegada.}
+    \label{fig:verif_waypoints}
+\end{figure}
+
+%
+% ============
+%
+\subsection{Etapa 2: Recorrido de la trayectoria}
+\label{sec:verif_ejecucion}
+
+Desde la pestaña \textit{Ejecutar} de la interfaz gráfica implementada en PyQt5, se selecciona la trayectoria generada en la etapa anterior para cargar sus posiciones y ejecutar el recorrido. De forma simultánea, se valida visualmente la correcta definición de la trayectoria en el entorno de simulación RViz2, verificando que el manipulador recorra las posturas definidas en el orden y con las características de interpolación establecidas durante el \textit{teaching}.
+
+%
+% ============
+%
+\subsection{Etapa 3: Análisis cinemático}
+\label{sec:verif_analisis}
+
+Una vez finalizada la ejecución, se accede al análisis cinemático completo desde la opción \textit{Analizar} disponible en la pestaña \textit{Ejecutar} de la interfaz gráfica. El diálogo de análisis presenta cuatro pestañas con la evolución temporal de las variables cinemáticas del manipulador a lo largo del ciclo ejecutado.
+
+La figura~\ref{fig:verif_an1} muestra la evolución de las coordenadas articulares $q_1$ a $q_6$ y de la posición cartesiana del efector final $(x, y, z, \text{roll}, \text{pitch}, \text{yaw})$.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\linewidth]{verif_an1.png}
+    \caption{Evolución de posiciones articulares y coordenadas cartesianas del efector final durante el ciclo.}
+    \label{fig:verif_an1}
+\end{figure}
+
+La figura~\ref{fig:verif_an2} presenta las velocidades y aceleraciones articulares junto con sus límites definidos.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\linewidth]{verif_an2.png}
+    \caption{Evolución de velocidades y aceleraciones articulares durante el ciclo.}
+    \label{fig:verif_an2}
+\end{figure}
+
+La figura~\ref{fig:verif_an3} muestra la velocidad y aceleración lineales del efector final calculadas a través del Jacobiano geométrico, en comparación con los límites establecidos.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\linewidth]{verif_an3.png}
+    \caption{Evolución de velocidad y aceleración lineales del efector final durante el ciclo.}
+    \label{fig:verif_an3}
+\end{figure}
+
+La figura~\ref{fig:verif_an4} presenta la velocidad y aceleración angulares del efector final con sus respectivos límites.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\linewidth]{verif_an4.png}
+    \caption{Evolución de velocidad y aceleración angulares del efector final durante el ciclo.}
+    \label{fig:verif_an4}
+\end{figure}
+
+Del análisis se concluye que el ciclo operativo completo resulta en un tiempo de ejecución inferior a 10 segundos, lo que valida el cumplimiento del objetivo de productividad de 300 transferencias por hora. Asimismo, los perfiles de velocidad y aceleración tanto articulares como cartesianos se mantienen dentro de los límites cinemáticos definidos sin superarlos de forma considerable a lo largo de todo el ciclo.
+
+% ======================================================================
+\newpage
 \section{Conclusiones y trabajo futuro}
 \label{sec:conclusiones}
 
+El presente trabajo logró cumplir con los objetivos planteados, desarrollando de forma íntegra el modelado cinemático, la simulación y la integración en software de robótica de un manipulador serial de seis grados de libertad orientado a tareas de automatización logística.
+
+En la etapa de modelado, se aplicó la convención Denavit-Hartenberg para formular la cinemática directa del manipulador y se obtuvo una solución analítica cerrada de la cinemática inversa. Este enfoque, alternativo a los métodos numéricos iterativos, resultó eficaz para el robot estudiado y permitió obtener hasta 512 configuraciones articulares válidas para una misma pose del efector final, brindando una amplia base para la selección de la solución óptima en cada instante de la trayectoria. Se identificaron y caracterizaron analíticamente las tres singularidades geométricas del manipulador: de hombro, de codo y de muñeca.
+
+El módulo de generación de trayectorias incorporó interpolación en espacio articular y cartesiano, con un mecanismo de escalado automático de velocidades y aceleraciones basado en el Jacobiano geométrico, garantizando en todo momento el respeto de los límites cinemáticos del sistema. La simulación de la tarea completa de \textit{bin-to-bin transfer} en MATLAB validó el correcto funcionamiento del conjunto, combinando segmentos de interpolación articular para los desplazamientos rápidos y segmentos de interpolación cartesiana para las maniobras de \textit{picking} y \textit{placing}.
+
+El diseño CAD de los eslabones en \textit{Fusion 360} y su integración como mallas STL al entorno de simulación permitió verificar visualmente la coherencia geométrica entre el modelo cinemático y la representación tridimensional del robot.
+
+Finalmente, la integración en ROS~2 trasladó toda la cadena cinemática a una arquitectura de nodos distribuida, desarrollada íntegramente desde cero y sin dependencias de librerías de robótica de alto nivel. Se implementaron interfaces de comunicación personalizadas, un modelo URDF derivado directamente de la parametrización DH, visualización en RViz2 y una interfaz gráfica de usuario en PyQt5 que centraliza el movimiento manual, la enseñanza de puntos, la gestión de trayectorias y el análisis de variables cinemáticas.
+
+Se verificó la funcionalidad completa del sistema en este entorno y se validó el cumplimiento de los objetivos de productividad establecidos para la tarea. Como limitación identificada en esta etapa, el servicio de generación de trayectorias acepta un único punto por solicitud, lo que impide la interpolación continua entre puntos vía consecutivos y obliga al robot a detenerse en cada punto intermedio, a diferencia del comportamiento logrado en MATLAB.
+
+\subsection*{Trabajo futuro}
+
+A partir del estado actual del desarrollo, se identifican las siguientes líneas de extensión prioritarias:
+
+\begin{enumerate}
+
+    \item \textbf{Interpolación continua entre puntos vía en ROS~2.} Rediseñar el servicio \texttt{/dr/gen\_traj} para que acepte una lista completa de puntos vía en una única solicitud, replicando el comportamiento de \texttt{mstraj} en MATLAB. Esto eliminaría la detención del robot en cada punto intermedio y permitiría trayectorias continuas y fluidas en el entorno ROS~2.
+
+    \item \textbf{Replanificación de trayectorias en tiempo real.} Incorporar un módulo de replanificación que, ante cambios en el entorno o desviaciones respecto a la trayectoria nominal, genere una trayectoria alternativa sin detener la ejecución. Una primera aproximación realista consiste en monitorear el determinante del Jacobiano durante la ejecución y disparar una replanificación automática al detectar proximidad a configuraciones singulares.
+
+    \item \textbf{Detección y evasión de colisiones.} Integrar un módulo de verificación de colisiones que opere tanto sobre objetos del entorno como sobre la propia geometría del robot (\textit{self-collision}). Una implementación realista puede basarse en la representación simplificada del robot mediante esferas o cápsulas envolventes y en el uso de la biblioteca \textit{FCL} (\textit{Flexible Collision Library}), disponible en el ecosistema ROS~2.
+
+    \item \textbf{Mejoras de simulación en ROS~2.} Extender la simulación para incorporar el comportamiento completo de la tarea: activación y desactivación del \textit{gripper} durante las maniobras de \textit{picking} y \textit{placing}, gestión del estado de la herramienta y visualización en RViz2 del objeto manipulado a lo largo de la trayectoria. Esto permitiría una validación más fiel del ciclo completo de trabajo del manipulador.
+
+    \item \textbf{Robustez del sistema.} Mejorar el manejo de errores en los nodos de ROS~2 incorporando reintentos con \textit{timeout}, recuperación ante fallos de servicio y retroalimentación más detallada hacia la interfaz gráfica. Incorporar métricas de tiempo de ejecución por segmento de trayectoria para facilitar el ajuste fino de los perfiles de velocidad en función de los requerimientos de productividad.
+
+\end{enumerate}
 
 % ======================================================================
 \newpage
@@ -1776,7 +1939,7 @@ De la misma manera al análisis en MATLAB, se presentan los valores obtenido en 
 La verificación del correcto funcionamiento del módulo de cinemática inversa se realiza mediante el script \colorbox{gray!20}{\texttt{test\_inv\_kinematics.m}}. Este incluye 3 funcionalidades
 
 \begin{enumerate}
-    \item \textbf{Verificación redundante:} Se define una coordenada articular, se calcula la cinemática directa para obtener la coordenada cartesiana del efector final, sobre esta última se calcula la cinemática inversa con el módulo desarrollado. Finalmente, se presentan los resultado dejando en evidencia la coordenada articular inicial y el conjunto obtenido mediante cinemática inversa, también se calcula la cinemática directa para cada solución obtenida permitiendo otro contraste de resultados.
+    \item \textbf{Verificación redundante:} Se define una coordenada articular, se calcula la cinemática directa para obtener la coordenada cartesiana del efector final, sobre esta última se calcula la cinemática inversa con el módulo desarrollado. Se presentan los resultados dejando en evidencia la coordenada articular inicial y el conjunto obtenido mediante cinemática inversa, también se calcula la cinemática directa para cada solución obtenida permitiendo otro contraste de resultados. Finalmente, se realiza un resumen estadístico del error entre la coordenada cartesiana de entrada y las coordenadas cartesianas obtenidas a partir de cada solución articular, para verificar que el error se mantenga dentro de un rango aceptable.
 \begin{lstlisting}[style=Matlab-editor, basicstyle=\small\ttfamily]
 % ==INPUT ==
 % Coordenadas articulares igresadas:
@@ -1794,6 +1957,16 @@ x = -0.16918 | y = -0.19848 | z = 0.29694 | alpha = 2.7989 | beta = -0.3074 | ga
 x = -0.16918 | y = -0.19848 | z = 0.29694 | alpha = 2.7989 | beta = -0.3074 | gamma = 2.2087
 x = -0.16918 | y = -0.19848 | z = 0.29694 | alpha = 2.7989 | beta = -0.3074 | gamma = 2.2087
 x = -0.16918 | y = -0.19848 | z = 0.29694 | alpha = 2.7989 | beta = -0.3074 | gamma = 2.2087
+
+
+% --- Resumen estadístico IK (poses aleatorias) ---
+Poses testeadas:    300
+Sin solución IK:    0
+\end{lstlisting}
+\begin{lstlisting}[basicstyle=\small\ttfamily]
+  Poses verificadas:  300  (100.0%)
+  Error posición    - max: 3.66e-06 m    prom: 2.06e-06 m
+  Error orientación - max: 1.10e-05 rad  prom: 6.20e-06 rad
 \end{lstlisting}
 
     \item \textbf{Cálculo directo: } Esta funcionalidad no se define específicamente para realizar una verificación sino para  conocer las coordenadas articulares solución de la cinemática inversa a partir de la coordenada cartesiana ingresada de forma directa. Los resultados se presentan de misma forma al ítem 1 dado que solo se realiza un \textit{override} durante ejecución de la coordenada cartesiana de entrada.
@@ -1862,6 +2035,58 @@ Se definen manualmente una serie de puntos vía con sus respectivos modos de int
     \item \textbf{Interpolación entre puntos vía:}  Se verifica que la trayectoria resultante efectivamente pase por cada uno de los puntos vía definidos, para esto, se calcula la distancia entre cada punto vía y el punto de la trayectoria correspondiente al mismo tiempo, verificando que esta distancia sea menor a un umbral determinado. En caso de detectar una cercanía lo suficientemente pequeña, se considera que el punto vía ha sido interpolado correctamente y se incrementa un contador.La verificación será positiva siempre que el contador sea mayor o igual al número total de puntos vía definidos.
     \item \textbf{Cumplimiento de límites cinemáticos:} Se imprime la comparativa entre valores máximos, perfiles cinemáticos iniciales y perfiles cinemáticos escalados para cumplir con límites. Se verifica: velocidad y aceleración angular de articulaciones, velocidad y aceleración líneal y angular de efector final. De este modo, la verificación será visual.
 \end{enumerate}
+
+Como complemento numérico a la verificación visual descripta, se presenta a continuación la salida del script \colorbox{gray!20}{\texttt{test\_gen\_traj.m}} para una trayectoria de prueba, donde se verifica el alcance los puntos vía y se contrastan los límites articulares y cinemáticos establecidos con los valores máximos efectivamente alcanzados a lo largo de la trayectoria escalada:
+
+\begin{lstlisting}[basicstyle=\small\ttfamily]
+N_alcanzados =
+
+    60
+
+Todos los puntos de control fueron alcanzados.
+--- Verificación de límites articulares ---
+  q1: límite = [-6.283, 6.283] rad | alcanzado = [-1.298, 1.391] rad
+  q2: límite = [-6.283, 6.283] rad | alcanzado = [-0.403, 0.548] rad
+  q3: límite = [-6.283, 6.283] rad | alcanzado = [-1.914, 1.021] rad
+  q4: límite = [-6.283, 6.283] rad | alcanzado = [3.155, 3.508] rad
+  q5: límite = [-6.283, 6.283] rad | alcanzado = [-1.584, 1.563] rad
+  q6: límite = [-17453.293, 17453.293] rad | alcanzado = [-0.190, 0.785] rad
+
+--- Verificación de velocidades y aceleraciones articulares ---
+  qd1:  límite = 3.142 rad/s    | alcanzado = 0.530 rad/s
+  qd2:  límite = 3.142 rad/s    | alcanzado = 0.151 rad/s
+  qd3:  límite = 3.142 rad/s    | alcanzado = 0.758 rad/s
+  qd4:  límite = 6.283 rad/s    | alcanzado = 0.089 rad/s
+  qd5:  límite = 6.283 rad/s    | alcanzado = 0.792 rad/s
+  qd6:  límite = 6.283 rad/s    | alcanzado = 0.261 rad/s
+  qdd1: límite = 13.963 rad/s^2 | alcanzado = 1.208 rad/s^2
+  qdd2: límite = 13.963 rad/s^2 | alcanzado = 0.343 rad/s^2
+  qdd3: límite = 13.963 rad/s^2 | alcanzado = 1.728 rad/s^2
+  qdd4: límite = 13.963 rad/s^2 | alcanzado = 0.203 rad/s^2
+  qdd5: límite = 13.963 rad/s^2 | alcanzado = 1.807 rad/s^2
+  qdd6: límite = 13.963 rad/s^2 | alcanzado = 0.596 rad/s^2
+
+--- Verificación de velocidades y aceleraciones del efector final ---
+  |v|:     límite = 1.000 m/s     | alcanzado = 0.330 m/s
+  |a|:     límite = 1.500 m/s^2   | alcanzado = 0.739 m/s^2
+  |w|:     límite = 3.000 rad/s   | alcanzado = 1.235 rad/s
+  |alpha|: límite = 3.000 rad/s^2 | alcanzado = 3.098 rad/s^2
+\end{lstlisting}
+
+Se observa que la totalidad de los valores articulares y cartesianos alcanzados se mantiene dentro de los límites establecidos, con la única excepción de la aceleración angular del efector final, cuyo valor máximo (3.098~rad/s$^2$) supera marginalmente el límite definido (3.000~rad/s$^2$) en un instante puntual de la trayectoria, sin representar una superación considerable. A continuación puede observarse el impacto de los efectos de escalado en el perfil de velocidad en ambos dominios, articular y cartesiano:
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.85\linewidth]{verif_gen_traj_art.png}
+    \caption{Comparativa entre perfiles de velocidad articular antes y después del escalado para cumplimiento de límites.}
+    \label{fig:verif_gen_traj_vel}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.85\linewidth]{verif_gen_traj_cart.png}
+    \caption{Comparativa entre perfiles de velocidad cartesiana del efector final antes y después del escalado para cumplimiento de límites.}
+    \label{fig:verif_gen_traj_vel_cart}
+\end{figure}
 
 %====
 \subsection{Integración en ROS~2}

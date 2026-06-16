@@ -64,6 +64,30 @@ cd matlab
 main
 ```
 
+#### Ejemplo: correr la tarea principal desde cero
+
+Para reproducir la demo principal (toma de pieza en la caja origen, traslado y depósito en la caja destino) partiendo de una instalación limpia:
+
+1. En `matlab/flags.m`, activar únicamente la tarea y dejar el resto de los flags en `0`:
+
+```matlab
+TAREA = 1;
+```
+
+2. Elegir el modelo 3D a animar:
+
+```matlab
+CAD_DESIGN = 1; % 1 = models/CAD | 2 = models/CAD2
+```
+
+3. Con el directorio de trabajo en `matlab/`, ejecutar:
+
+```matlab
+main
+```
+
+Esto genera la trayectoria completa (`gen_traj`), la anima sobre el modelo 3D elegido (`myAnimate`) y grafica posiciones/velocidades/aceleraciones articulares y cartesianas junto con sus límites (`grafQ`, `grafQaE`).
+
 ### ROS 2 (Docker)
 
 Desde la carpeta `ros2/`:
@@ -78,7 +102,41 @@ docker compose build
 docker compose up
 ```
 
-El contenedor monta `ros2/src/` como volumen, por lo que los cambios en el código fuente se reflejan sin necesidad de reconstruir la imagen.
+El contenedor monta `ros2/src/` como volumen, por lo que los cambios en el código fuente se reflejan sin necesidad de reconstruir la imagen. `entrypoint.sh` deja la sesión posicionada en `/root/ros2_PFE` (carpeta raíz del proyecto dentro del contenedor) con el entorno de ROS 2 sourceado.
+
+#### Ejecutar la demo principal
+
+Para ver el robot funcionando junto con su visualización hacen falta **dos terminales abiertas sobre la carpeta raíz del proyecto dentro del contenedor** (`/root/ros2_PFE`):
+
+**Terminal 1** — levanta el sistema completo de nodos (cinemática, generación de trayectorias, ejecución, estado, almacenamiento, teaching y GUI):
+
+```bash
+cd ros2
+docker compose up
+```
+
+Dentro de la sesión que se abre:
+
+```bash
+ros2 launch dr_bringup dr.launch.py
+```
+
+**Terminal 2** — abre una segunda sesión sobre el mismo contenedor para la visualización en RViz:
+
+```bash
+cd ros2
+docker compose exec ros2_pfe bash
+```
+
+Dentro de esa segunda sesión (re-sourceando el workspace, ya que cada `exec` abre una shell nueva):
+
+```bash
+source /opt/ros/jazzy/setup.bash
+source install/setup.bash
+rviz2
+```
+
+> El repositorio no incluye una configuración `.rviz` guardada: en RViz hay que agregar manualmente los displays `RobotModel` y `TF`, y fijar `Fixed Frame` en `base_link`.
 
 ## Clonado
 
