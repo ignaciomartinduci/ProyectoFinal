@@ -11,14 +11,10 @@ class TeachingNode(Node):
         self.q0 = [0.0] * 6
         self.c0 = [0.0] * 6
 
-        self.state_sub = self.create_subscription(
-            RobotState, "/dr/robot_state", self.callback_state_sub, 10
-        )
-        self.teaching_sub = self.create_subscription(
-            TeachingDelta, "/dr/teaching_delta", self.callback_teaching_sub, 10
-        )
-        self.tool_state_pub = self.create_publisher(ToolState, "/dr/tool_state", 10)
-        self.get_logger().info("Teaching node iniciado.")
+        self.state_sub = self.create_subscription(RobotState, '/dr/robot_state',self.callback_state_sub, 10)
+        self.teaching_sub = self.create_subscription(TeachingDelta, '/dr/teaching_delta', self.callback_teaching_sub, 10)
+        self.tool_state_pub = self.create_publisher(ToolState, '/dr/tool_state', 10)
+        self.get_logger().info('Teaching node iniciado.')
 
     def callback_state_sub(self, msg):
         self.q0 = msg.q
@@ -44,7 +40,6 @@ class TeachingNode(Node):
         self.tool_state_pub.publish(tool_msg)
 
         pass
-
 
 def main(args=None):
     rclpy.init(args=args)
