@@ -3,10 +3,14 @@ services:
     build: .
     image: ros2_pfe:latest
     environment:
-      - DISPLAY=${DISPLAY}
+      - DISPLAY=${DISPLAY:-:0}
+      - WAYLAND_DISPLAY=${WAYLAND_DISPLAY:-wayland-0}
+      - XDG_RUNTIME_DIR=/run/user/1000
       - QT_X11_NO_MITSHM=1
     volumes:
       - /tmp/.X11-unix:/tmp/.X11-unix:rw
+      - /mnt/wslg:/mnt/wslg:ro
+      - /mnt/wslg/runtime-dir:/run/user/1000:ro
       - ./src:/root/ros2_PFE/src:rw
       - trajectories:/root/ros2_PFE/src/trajectories
     network_mode: host
