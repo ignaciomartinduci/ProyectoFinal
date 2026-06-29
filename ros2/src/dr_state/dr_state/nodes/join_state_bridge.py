@@ -1,3 +1,25 @@
+# Copyright 2026 Ignacio Martín Duci
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to
+# deal in the Software without restriction, including without limitation the
+# rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+# sell copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+# FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+# DEALINGS IN THE SOFTWARE.
+
+import os
+import sys
 import rclpy
 from rclpy.node import Node
 from rclpy.qos import QoSProfile, DurabilityPolicy
@@ -16,12 +38,19 @@ class JointStateBridgeNode(Node):
         self.sub = self.create_subscription(RobotState, '/dr/robot_state', self.callback, latched_qos)
         self.last_q  = [0.0] * 6
         self.last_qd = [0.0] * 6
+        self._first_bridged = False
         self.create_timer(0.05, self.timer_callback)
         self.get_logger().info('Joint state bridge iniciado.')
+        if os.environ.get('DR_DEBUG') == '1':
+            print('\033[92mNODO joint_state_bridge_node INICIADO CORRECTAMENTE\033[0m  sub: /dr/robot_state  |  pub: /joint_states', file=sys.stderr)
 
     def callback(self, msg):
         self.last_q  = list(msg.q)
         self.last_qd = list(msg.qd)
+        if not self._first_bridged and os.environ.get('DR_DEBUG') == '1':
+            self._first_bridged = True
+            G, R = '\033[92m', '\033[0m'
+            print(f'{G}--> [joint_state_bridge_node]{R} primer robot_state recibido: q={[f"{v:.3f}" for v in self.last_q]}', file=sys.stderr)
 
     def timer_callback(self):
         js = JointState()

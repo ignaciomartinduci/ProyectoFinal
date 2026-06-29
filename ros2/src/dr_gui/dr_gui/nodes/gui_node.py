@@ -1,3 +1,23 @@
+# Copyright 2026 Ignacio Martín Duci
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to
+# deal in the Software without restriction, including without limitation the
+# rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+# sell copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+# FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+# DEALINGS IN THE SOFTWARE.
+
 import sys
 import os
 import signal
@@ -11,6 +31,7 @@ from matplotlib.figure import Figure
 import rclpy
 from rclpy.action import ActionClient
 from rclpy.node import Node
+from rclpy.qos import QoSProfile, DurabilityPolicy
 from dr_interfaces.srv import GenTraj, SaveTraj, ListTrajs, DeleteTraj, LoadTraj, SolveFK
 from dr_interfaces.action import Execute as ExecuteAction
 from dr_interfaces.msg import RobotState, TeachingDelta
@@ -47,7 +68,11 @@ class GUINode(Node):
         self.ef_alpha_max = self.get_parameter('ef_alpha_max').value
 
         self.window = None
-        self.state_sub = self.create_subscription(RobotState, '/dr/robot_state', self.robot_state_callback, 10)
+        self._first_state_received = False
+        self._last_q    = None
+        self._last_pose = None
+        latched_qos = QoSProfile(depth=1, durability=DurabilityPolicy.TRANSIENT_LOCAL)
+        self.state_sub = self.create_subscription(RobotState, '/dr/robot_state', self.robot_state_callback, latched_qos)
         self.teaching_pub = self.create_publisher(TeachingDelta, '/dr/teaching_delta', 10)
         self.gen_traj_client = self.create_client(GenTraj, '/dr/gen_traj')
         self.save_traj_client = self.create_client(SaveTraj, '/dr/save_traj')
@@ -58,8 +83,15 @@ class GUINode(Node):
         self.execute_client = ActionClient(self, ExecuteAction, '/dr/execute')
 
     def robot_state_callback(self, msg):
-        if self.window is not None:
-            self.window.state_signal.emit(list(msg.q), list(msg.pose))
+        self._last_q    = list(msg.q)
+        self._last_pose = list(msg.pose)
+        if not self._first_state_received:
+            self._first_state_received = True
+            if os.environ.get('DR_DEBUG') == '1':
+                q_str    = [f'{v:.3f}' for v in msg.q]
+                pose_str = [f'{v:.3f}' for v in msg.pose]
+                G, R = '\033[92m', '\033[0m'
+                print(f'{G}--> [gui_node]{R} primer estado recibido: q={q_str} pose={pose_str}', file=sys.stderr)
 
     def send_delta(self, axis, sign):
         step = sign * self.window.step_spinbox.value()
@@ -71,6 +103,9 @@ class GUINode(Node):
         msg.dpitch = step if axis == 'Pitch' else 0.0
         msg.dyaw   = step if axis == 'Yaw'   else 0.0
         self.teaching_pub.publish(msg)
+        if os.environ.get('DR_DEBUG') == '1':
+            G, R = '\033[92m', '\033[0m'
+            print(f'{G}--> [gui_node]{R} /dr/teaching_delta → {axis}: {step:+.3f}', file=sys.stderr)
 
     def call_fk(self, q):
         request = SolveFK.Request()
@@ -78,17 +113,39 @@ class GUINode(Node):
         future = self.fk_client.call_async(request)
         event = threading.Event()
         future.add_done_callback(lambda f: event.set())
-        event.wait()
+        if not event.wait(timeout=5.0) or future.result() is None:
+            self.get_logger().error('FK service timeout en call_fk')
+            return [0.0] * 6
         return list(future.result().pose)
 
     def finalizar(self, waypoints, nombre):
         modo_map  = {'Joint': 0, 'Linear': 1}
         speed_map = {'Lento': 1, 'Medio': 2, 'Rápido': 3}
 
+        if len(waypoints) < 2:
+            return False, 'Se necesitan al menos 2 waypoints (inicial y final).'
+
+        if os.environ.get('DR_DEBUG') == '1':
+            G, R = '\033[92m', '\033[0m'
+            print(f'{G}--> [gui_node]{R} generando trayectoria: {len(waypoints)} waypoints', file=sys.stderr)
+
+        # Ghost run al primer waypoint: posiciona gen_traj_node en wp1 sin guardar esa trayectoria
+        first = waypoints[0]
+        ghost_req = GenTraj.Request()
+        ghost_req.pose          = list(first['pose'])
+        ghost_req.mode          = modo_map[first['modo']]
+        ghost_req.speed_profile = speed_map[first['speed']]
+        future = self.gen_traj_client.call_async(ghost_req)
+        event  = threading.Event()
+        future.add_done_callback(lambda _: event.set())
+        event.wait()
+        if not future.result().success:
+            return False, future.result().message
+
+        # Trayectoria real: wp1 → wp2 → … → wpN
         q_traj_total = []
         points_total = 0
-
-        for wp in waypoints:
+        for wp in waypoints[1:]:
             request = GenTraj.Request()
             request.pose          = list(wp['pose'])
             request.mode          = modo_map[wp['modo']]
@@ -117,6 +174,9 @@ class GUINode(Node):
         event.wait()
 
         result = future.result()
+        if result.success and os.environ.get('DR_DEBUG') == '1':
+            G, R = '\033[92m', '\033[0m'
+            print(f'{G}--> [gui_node]{R} trayectoria \'{nombre}\' guardada ({points_total} puntos)', file=sys.stderr)
         return result.success, result.message
 
 
@@ -295,6 +355,16 @@ class MainWindow(QMainWindow):
         self.executing_signal.connect(
             lambda executing: self.tab_teaching.setEnabled(not executing))
         self.analyze_enable_signal.connect(self._enable_analyze_button)
+        if os.environ.get('DR_DEBUG') == '1':
+            print('\033[92mNODO gui_node INICIADO CORRECTAMENTE\033[0m  sub: /dr/robot_state  |  pub: /dr/teaching_delta  |  action: /dr/execute', file=sys.stderr)
+
+        self._state_timer = QTimer()
+        self._state_timer.timeout.connect(self._refresh_state)
+        self._state_timer.start(100)
+
+    def _refresh_state(self):
+        if self.node._last_q is not None:
+            self.update_state_table(self.node._last_q, self.node._last_pose)
 
     def _enable_analyze_button(self, nombre):
         for n, btn in self.analyze_buttons.items():
@@ -327,8 +397,12 @@ class MainWindow(QMainWindow):
         goal.q_traj = result.q_traj
         goal.points = result.points
 
+        self.status_signal.emit(f"Saltando a posición inicial de '{nombre}'...")
         self.status_signal.emit(f"Recorriendo '{nombre}'...")
         self.progress_signal.emit(0)
+        if os.environ.get('DR_DEBUG') == '1':
+            G, R = '\033[92m', '\033[0m'
+            print(f'{G}--> [gui_node]{R} ejecutando \'{nombre}\' ({goal.points} puntos)', file=sys.stderr)
 
         send_future = self.node.execute_client.send_goal_async(
             goal, feedback_callback=self._feedback_callback)
@@ -353,8 +427,14 @@ class MainWindow(QMainWindow):
             self.progress_signal.emit(100)
             self._store_execution_data(nombre)
             self.analyze_enable_signal.emit(nombre)
+            if os.environ.get('DR_DEBUG') == '1':
+                G, R = '\033[92m', '\033[0m'
+                print(f'{G}--> [gui_node]{R} \'{nombre}\' completado OK', file=sys.stderr)
         else:
             self.status_signal.emit(f"Error: {res.message}")
+            if os.environ.get('DR_DEBUG') == '1':
+                RED, R = '\033[91m', '\033[0m'
+                print(f'{RED}--> [gui_node]{R} \'{nombre}\' error: {res.message}', file=sys.stderr)
         self.executing_signal.emit(False)
 
     def _store_execution_data(self, nombre):
@@ -505,6 +585,10 @@ class MainWindow(QMainWindow):
             'speed': self.combo_speed.currentText(),
         }
         self.waypoints.append(wp)
+        if os.environ.get('DR_DEBUG') == '1':
+            G, R = '\033[92m', '\033[0m'
+            pose_str = [f'{v:.3f}' for v in wp['pose']]
+            print(f'{G}--> [gui_node]{R} waypoint {len(self.waypoints)} capturado: pose={pose_str}', file=sys.stderr)
 
     def on_finalizar(self):
         nombre = self.input_nombre.text().strip()
@@ -587,7 +671,7 @@ class AnalysisDialog(QDialog):
             "Coordenadas")
         self.analysis_tabs.addTab(
             self._tab_articular(t),
-            "Dinámica articular")
+            "Vel/Acc articular")
         self.analysis_tabs.addTab(
             self._tab_ef_lineal(t, data['v_lin'], data['a_lin']),
             "EF Lineal")
@@ -643,7 +727,7 @@ class AnalysisDialog(QDialog):
         layout.addWidget(canvas_c)
         return widget
 
-    # ── Tab 2: Dinámica articular ─────────────────────────────────────────────
+    # ── Tab 2: Vel/Acc articular ─────────────────────────────────────────────
 
     def _tab_articular(self, t):
         widget = QWidget()

@@ -1,3 +1,23 @@
+# Copyright 2026 Ignacio Martín Duci
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to
+# deal in the Software without restriction, including without limitation the
+# rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+# sell copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+# FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+# DEALINGS IN THE SOFTWARE.
+
 import rclpy
 from rclpy.node import Node
 from dr_interfaces.srv import SaveTraj
@@ -5,6 +25,7 @@ from dr_interfaces.srv import LoadTraj
 from dr_interfaces.srv import ListTrajs
 from dr_interfaces.srv import DeleteTraj
 import os
+import sys
 import json
 
 class StorageNode(Node):
@@ -20,6 +41,8 @@ class StorageNode(Node):
         self.load_srv  = self.create_service(LoadTraj,  '/dr/load_traj',  self.load_traj_callback)
         self.delete_srv = self.create_service(DeleteTraj, '/dr/delete_traj', self.delete_traj_callback)
         self.list_srv  = self.create_service(ListTrajs, '/dr/list_trajs', self.list_trajs_callback)
+        if os.environ.get('DR_DEBUG') == '1':
+            print('\033[92mNODO storage_node INICIADO CORRECTAMENTE\033[0m  srvs: /dr/save_traj | /dr/load_traj | /dr/delete_traj | /dr/list_trajs', file=sys.stderr)
 
     def save_traj_callback(self, request, response):
         try:
@@ -39,6 +62,9 @@ class StorageNode(Node):
             response.success = True
             response.message = f'Trayectoria {name} guardada.'
             self.get_logger().info(response.message)
+            if os.environ.get('DR_DEBUG') == '1':
+                G, R = '\033[92m', '\033[0m'
+                print(f'{G}--> [storage_node]{R} save: \'{name}\' guardada ({request.points} puntos)', file=sys.stderr)
         except Exception as e:
             response.success = False
             response.message = str(e)
@@ -64,6 +90,9 @@ class StorageNode(Node):
             response.success = True
             response.message = f'Trayectoria {name} cargada.'
             self.get_logger().info(response.message)
+            if os.environ.get('DR_DEBUG') == '1':
+                G, R = '\033[92m', '\033[0m'
+                print(f'{G}--> [storage_node]{R} load: \'{name}\' cargada ({response.points} puntos)', file=sys.stderr)
         except Exception as e:
             response.success = False
             response.message = str(e)
@@ -77,6 +106,9 @@ class StorageNode(Node):
             names = [f.replace('.json', '') for f in files if f.endswith('.json')]
             response.names = names
             response.success = True
+            if os.environ.get('DR_DEBUG') == '1':
+                G, R = '\033[92m', '\033[0m'
+                print(f'{G}--> [storage_node]{R} list: {len(names)} trayectorias encontradas', file=sys.stderr)
         except Exception as e:
             response.names = []
             response.success = False
@@ -90,6 +122,9 @@ class StorageNode(Node):
                 response.success = True
                 response.message = f'Trayectoria {request.name} eliminada.'
                 self.get_logger().info(response.message)
+                if os.environ.get('DR_DEBUG') == '1':
+                    G, R = '\033[92m', '\033[0m'
+                    print(f'{G}--> [storage_node]{R} delete: \'{request.name}\' eliminada', file=sys.stderr)
             else:
                 response.success = False
                 response.message = f'Trayectoria {request.name} no encontrada.'

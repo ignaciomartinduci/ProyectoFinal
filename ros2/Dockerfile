@@ -13,7 +13,7 @@ RUN . /opt/ros/jazzy/setup.sh && \
     colcon build --symlink-install
 
 COPY entrypoint.sh /entrypoint.sh
-RUN chmod +x /entrypoint.sh
+RUN chmod +x /entrypoint.shq
 
 ENTRYPOINT ["/entrypoint.sh"]
 CMD ["bash"]

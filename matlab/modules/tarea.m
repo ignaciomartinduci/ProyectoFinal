@@ -27,7 +27,7 @@ q2 =  R.qlim(2,1) + (R.qlim(2,2)-R.qlim(2,1))*rand;
 q3 =  R.qlim(3,1) + (R.qlim(3,2)-R.qlim(3,1))*rand;
 q4 =  R.qlim(4,1) + (R.qlim(4,2)-R.qlim(4,1))*rand;
 q5 =  R.qlim(5,1) + (R.qlim(5,2)-R.qlim(5,1))*rand;
-q6 =  -2*pi + (2*pi-2*pi)*rand;
+q6 =  -2*pi + (2*pi+2*pi)*rand;
 
 q0 = q_punto_medio;
 % -1.0600    0.2519   -1.8082   -0.0185    1.5844   -2.6408

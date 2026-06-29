@@ -1,3 +1,25 @@
+# Copyright 2026 Ignacio Martín Duci
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to
+# deal in the Software without restriction, including without limitation the
+# rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+# sell copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+# FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+# DEALINGS IN THE SOFTWARE.
+
+import os
+import sys
 import rclpy
 from rclpy.node import Node
 from dr_interfaces.srv import SolveFK
@@ -54,27 +76,34 @@ class FKNode(Node):
         self.solver = ForwKinematics(params)
         self.srv = self.create_service(SolveFK, '/dr/solve_fk', self.solve_fk_callback)
         self.get_logger().info('FK node iniciado.')
+        if os.environ.get('DR_DEBUG') == '1':
+            print('\033[92mNODO fk_node INICIADO CORRECTAMENTE\033[0m  srv: /dr/solve_fk', file=sys.stderr)
 
     def solve_fk_callback(self, request, response):
+        debug   = os.environ.get('DR_DEBUG')         == '1'
+        verbose = os.environ.get('DR_DEBUG_VERBOSE') == '1'
+        G, RED, R = '\033[92m', '\033[91m', '\033[0m'
+        PREFIX = f'{G}--> [fk_node]{R}'
 
-        q1 = request.q[0]
-        q2 = request.q[1]
-        q3 = request.q[2]
-        q4 = request.q[3]
-        q5 = request.q[4]
-        q6 = request.q[5]
+        q = list(request.q)
+        if verbose:
+            print(f'{PREFIX} request: q={[f"{v:.3f}" for v in q]}', file=sys.stderr)
 
-        [success, pose] = self.solver.solve_fk(q1, q2, q3, q4, q5, q6)
+        [success, pose] = self.solver.solve_fk(q[0], q[1], q[2], q[3], q[4], q[5])
 
         if success:
-            response.success = success
+            response.success = True
             response.pose = pose
             response.message = 'Solución para FK encontrada'
+            if verbose:
+                print(f'{PREFIX} → pose={[f"{v:.3f}" for v in pose]}', file=sys.stderr)
         else:
-            response.success = success
+            response.success = False
             response.pose = [0.0]*6
             response.message = 'Fallo al calcular FK'
-            self.get_logger().warn(f'FK falló para q = {list(request.q)}')
+            self.get_logger().warn(f'FK falló para q = {q}')
+            if debug:
+                print(f'{RED}--> [fk_node]{R} FK falló para q={[f"{v:.3f}" for v in q]}', file=sys.stderr)
 
         return response
 

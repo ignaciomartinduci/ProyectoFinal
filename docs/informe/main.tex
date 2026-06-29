@@ -152,10 +152,10 @@ A Dios.
 \section{Introducción}
 
 \subsection{Motivación y mercado}
-La automatización e informatización de procesos de servicios es una trayectoria que, con el pasar de los años, aumenta su presencia en los diferentes mercados, brindando un aumento de la eficiencia, precisión, seguridad, operatividad y trazabilidad. Estos beneficios que brinda la implementación de tecnologías también quitan competitividad a aquellas entidades que, por disponibilidad, costo o falta de personal capacitado, no pueden implementar. 
+La automatización e informatización de procesos de servicios es una trayectoria que, con el pasar de los años, aumenta su presencia en los diferentes mercados, brindando un aumento de la eficiencia, precisión, seguridad, operatividad y trazabilidad. Estos beneficios que brinda la implementación de tecnologías también quitan competitividad a aquellas entidades que, por disponibilidad, costo o falta de personal capacitado, no pueden implementarlas. 
 
 Al revisar datos aportados por la consultora \href{https://www.grandviewresearch.com}{\textit{Grand View Research}},
- para analizar las proyecciones de mercado 2023-2030 para la robótica aplicada a depósitos logísticos o su traducción al ingles \textit{warehouses} para el mundo \cite{gvrGlobal2024}, Estados Unidos \cite{gvrUS2024}, China \cite{gvrChina2024}, Latinoamérica \cite{gvrLatAm2024} y Brasil \cite{gvrBrazil2024} pueden elaborarse las siguientes conclusiones.
+ para analizar las proyecciones de mercado 2023-2030 para la robótica aplicada a depósitos logísticos o su traducción al inglés \textit{warehouses} para el mundo \cite{gvrGlobal2024}, Estados Unidos \cite{gvrUS2024}, China \cite{gvrChina2024}, Latinoamérica \cite{gvrLatAm2024} y Brasil \cite{gvrBrazil2024} pueden elaborarse las siguientes conclusiones.
 
 \begin{enumerate}
     \item Todos los mercados proyectan un crecimiento anual compuesto de entre 17\% y 22.1\% lo cual se considera por encima de un escenario favorable.
@@ -187,7 +187,7 @@ En la figura \ref{fig:aplicacion-vista-superior} puede verse un esquema de la ap
     \label{fig:aplicacion-vista-superior}
 \end{figure}
 
-Mínimamente, se propone que el robot tenga un alcance de 500 mm, similar a las características del robot comercial \href{https://www.universal-robots.com/products/ur3e?utm_source=chatgpt.com}{UR3e}. En la figura \ref{fig:robot} se puede ver un esquema general de la morfología del robot.
+Mínimamente, se propone que el robot tenga un alcance de 500 mm, similar a las características del robot comercial \href{https://www.universal-robots.com/products/ur3e}{UR3e}. En la figura \ref{fig:robot} se puede ver un esquema general de la morfología del robot.
 
 \begin{figure}[H]
     \centering
@@ -236,7 +236,7 @@ Los siguientes objetivos se desarrollan en dos etapas: los ítems 1 a 6 correspo
     \item Realizar un diseño conceptual preliminar.
     \item Analizar y validar el espacio de trabajo. 
     \item Resolver analíticamente y validar la cinemática inversa.
-    \item Implementar y validar un programa de generación de trayectorias que incorpore distintas funcionalidades, permitiendo la selección de modos de interpolación (cartesiana y articular) y la gestión de singularidades.
+    \item Implementar y validar un programa de generación de trayectorias que incorpore distintas funcionalidades, permitiendo la selección de modos de interpolación (cartesiana y articular).
     \item Implementar, simular y validar la ejecución de la tarea definida, asegurando su correcto desempeño y cumplimiento de los objetivos planteados.
     \item Desarrollar un modelo CAD para simulaciones cinemáticas, asegurando la correspondencia entre los sistemas de referencia de cada componente y los marcos definidos mediante la convención Denavit–Hartenberg, a fin de garantizar consistencia geométrica y fidelidad en la representación del sistema en entornos de simulación.
     \item Desarrollar el modelo del robot en formato URDF a partir de la parametrización cinemática definida (DH), asegurando la correcta correspondencia entre eslabones y articulaciones.
@@ -280,6 +280,21 @@ La tarea del manipulador consiste en la transferencia de objetos entre dos conte
 
 Los objetos serán tomados mediante un sistema de sujeción por vacío (ventosa - \textit{vacuum gripper}) y depositados mediante la liberación del mismo, esto permite relajar los requerimientos de precisión y repetibilidad del manipulador.
 
+\subsection*{Descripción y alcance de la trayectoria}
+
+El sistema de transferencia completo requiere la integración de tres componentes: un generador de trayectorias, un sistema de visión artificial y un planificador de alto nivel. En el presente trabajo el alcance se limita al desarrollo del generador de trayectorias para el cálculo de la trayectoria nominal y a la simulación de las trayectorias reactivas, con el fin de verificar la viabilidad de la implementación de la tarea. El sistema de visión artificial y el planificador de trayectoria quedan reservados para desarrollos posteriores.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.85\linewidth]{contexto_tarea.png}
+    \caption{Vista lateral del robot con segmentos de trayectoria nominal y reactiva.}
+    \label{fig:contexto_tarea}
+\end{figure}
+
+La trayectoria completa se estructura en tres segmentos diferenciados, ilustrados en la figura~\ref{fig:contexto_tarea}. El primero, de naturaleza \textbf{nominal}, conecta los puntos definidos por encima de la caja de origen y la caja de destino. Este segmento es predefinido y reproducible ciclo a ciclo, por lo que puede diseñarse para maximizar la productividad. Los otros dos, de naturaleza \textbf{reactiva}, conectan respectivamente el punto sobre la caja de origen con el punto de \textit{picking} y el punto sobre la caja de destino con el punto de \textit{placement}. Estas trayectorias no son fijas, ya que deben adaptarse en cada ciclo a las condiciones del entorno.
+
+Las trayectorias reactivas presentan múltiples restricciones cinemáticas y contextuales: los bordes de la caja, la presencia de otros objetos en su interior, la orientación del objeto a manipular y el espacio disponible para su colocación. Su generación requiere un sistema de reconocimiento de objetos mediante visión artificial que identifique el objeto más adecuado y más cercano al punto de partida, y determine el espacio libre en la caja de destino siguiendo una estrategia de relleno desde el centro hacia el exterior. Como nivel de coordinación superior, un planificador de trayectoria debería gestionar la activación de cada modo según el estado del sistema.
+
 \subsection*{Especificaciones del proyecto}
 
 Quedan definidas las especificaciones del manipulador que son objeto del presente trabajo:
@@ -313,7 +328,7 @@ Las siguientes especificaciones quedan definidas como referencia para desarrollo
 \section{Diseño conceptual preliminar}
 \label{sec:diseno_conceptual_preliminar}
 
-Con el objetivo de tener un punto de partida en cuanto a la morfología y dimensiones del robot, tomando como referencia al robot \href{https://www.universal-robots.com/products/ur3e?utm_source=chatgpt.com}{UR3e}, se define la siguiente estructura, morfología y dimensiones:
+Con el objetivo de tener un punto de partida en cuanto a la morfología y dimensiones del robot, tomando como referencia al robot \href{https://www.universal-robots.com/products/ur3e}{UR3e}, se define la siguiente estructura, morfología y dimensiones:
 
 \begin{figure}[H]
     \centering
@@ -325,7 +340,7 @@ Con el objetivo de tener un punto de partida en cuanto a la morfología y dimens
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.75\linewidth]{DIM_ROBOT_2.png}
-    \caption{Vista lateral 2 del un esquema del robot}
+    \caption{Vista lateral 2 de un esquema del robot}
     \label{fig:dim_robot_2}
 \end{figure}
 
@@ -340,11 +355,11 @@ A partir de estas imágenes se obtiene la información necesaria para la elabora
 \section{Modelado cinemático}
 \label{sec:cinematica}
 
-En esta sección se aborda el modelado cinemático del manipulador, así como la resolución de la cinemática inversa y la planificación de trayectorias necesarias para su operación.
+En esta sección se aborda el modelado cinemático del manipulador, así como la resolución de la cinemática inversa.
 
 El modelado cinemático permite establecer la relación entre las variables articulares del robot y la posición y orientación de su efector final. A partir de este modelo, se plantea la resolución de la cinemática inversa, con el objetivo de determinar las configuraciones articulares requeridas para alcanzar posiciones específicas dentro del espacio de trabajo.
 
-Finalmente, se desarrolla la planificación de trayectorias, mediante la cual se define la evolución temporal del movimiento del manipulador entre distintas configuraciones, garantizando continuidad, suavidad y seguridad en su ejecución.
+Finalmente, se desarrolla la generación de trayectorias, mediante la cual se define la evolución temporal del movimiento del manipulador entre distintas configuraciones, garantizando continuidad, suavidad y seguridad en su ejecución.
 
 %
 % ============
@@ -460,23 +475,8 @@ Notas:
 %
 % ============
 %
-\subsection{Análisis y verificación de espacio de trabajo }
-\label{sec:espacio_trabajo}
-
-Para verificar el alcance máximo y la tarea de nuestro robot, simplemente buscamos una posición de alto estiramiento ($q=[variable,\frac{pi}{2},0,-\frac{pi}{2},-\frac{pi}{2},0]$) y se ingresan valores progresivos completando el giro de la primera articulación. Luego, esto produce el siguiente resultado (script \colorbox{gray!20}{\texttt{test\_workspace.m}}):
-
-\begin{figure}[H]
-    \centering
-    \includegraphics[width=0.85\linewidth]{test_workspace_1.png}
-    \caption{Verificación de espacio de trabajo en plano XY}
-    \label{fig:workspace_1}
-\end{figure}
-
-%
-% ============
-%
 \subsection{Cinemática inversa}
-\label{sec:cinemática_inversa}
+\label{sec:cinematica_inversa}
 
 En el desarrollo cinemático de todo robot es fundamental elaborar el modelo de cinemática inversa, el cual permite determinar las variables articulares necesarias para alcanzar una posición y orientación deseadas del efector final. En este trabajo, la resolución se aborda mediante un enfoque analítico, obteniendo expresiones en forma cerrada que relacionan directamente las variables del espacio cartesiano con las variables articulares, evitando el uso de métodos numéricos iterativos.
 
@@ -501,7 +501,7 @@ También se sabe que:
     T^0_6=T^0_1T^1_2T^2_3T^3_4T^4_5T^5_6
 \end{equation}
 
-En esta ecuación hay una alta complejidad en el lado derecho (RHS) y una baja complejidad en el lado izquierdo (LSH) por lo que se equilibra de la siguiente manera:
+En esta ecuación hay una alta complejidad en el lado derecho (RHS) y una baja complejidad en el lado izquierdo (LHS) por lo que se equilibra de la siguiente manera:
 
 \begin{equation}
     \label{eq:ci_1}
@@ -536,7 +536,7 @@ Donde:
 
 \textbf{NOTA:} El subíndice i y j no indican sistemas diferentes sino que i hace referencia al ángulo $\theta$ y j al ángulo $\alpha$ para simplificar la nomenclatura de las funciones.
 
-Cada matriz de transformación homogénea esta compuesta por cuatro partes:
+Cada matriz de transformación homogénea está compuesta por cuatro partes:
 
 \[
 \left[T_i^{\,i-1}\right]
@@ -929,7 +929,7 @@ Y queda de la siguiente forma:
     \end{gathered}
 \end{equation}
 
-Al observar el lado izquierdo de cada ecuación, puede notarse que son las componentes de un vector, por lo tanto, podemos simplificar al elevar al sumar el cuadrado de cada lado entre sí.
+Al observar el lado izquierdo de cada ecuación, puede notarse que son las componentes de un vector, por lo tanto, podemos simplificar al elevar al cuadrado y sumar cada lado entre sí.
 
 \begin{equation}
         (a_3c_{23})^2+(a_3s_{23})^2=(-a_2c_2+a)^2+(-a_2s_2-b)^2
@@ -1030,7 +1030,7 @@ Se han obtenido todas las soluciones geométricas posibles (8) desde las cuales 
 \end{array}
 \]
 
-El robot a desarrollar cuenta con articulaciones rotativas con rango $[-2\pi,2\pi]$, lo que permite realizar un giro completo en cada sentido. Esto permite una mayor flexibilidad en la planificación de trayectorias, ya que existen múltiples configuraciones articulares equivalentes para alcanzar una misma pose del efector final. Esto provoca una \textit{periodicidad en las soluciones}, es decir, se puede alcanzar el mismo punto de un circulo al girar $15\degree$ o $-345\degree$.\\
+El robot a desarrollar cuenta con articulaciones rotativas con rango $[-2\pi,2\pi]$, lo que permite realizar un giro completo en cada sentido. Esto permite una mayor flexibilidad en la planificación de trayectorias, ya que existen múltiples configuraciones articulares equivalentes para alcanzar una misma pose del efector final. Esto provoca una \textit{periodicidad en las soluciones}, es decir, se puede alcanzar el mismo punto de un círculo al girar $15\degree$ o $-345\degree$.\\
 
 En primer lugar deben conocerse la cantidad de soluciones totales considerando periodicidad en articulaciones, dado que el rango total es, $\pm k\pi$ donde $k=2$, se duplicarán las soluciones por cada articulación que tenga periodicidad. En este caso, se consideran 6 articulaciones con periodicidad igual a 2 (NOTA: se considera que el rango de la última articulación es $\pm2\pi$, en realidad es una articulación libre por lo que conduciría a infinitas soluciones), así:
 
@@ -1038,6 +1038,7 @@ En primer lugar deben conocerse la cantidad de soluciones totales considerando p
     \text{Cantidad total de soluciones = Cantidad de soluciones geométricas}\times2^6=8\times2^6 = 512
 \end{equation}
 
+Cabe aclarar que estas 512 soluciones no son geométricamente independientes entre sí, sino variantes \textit{equivalentes} de las 8 soluciones geométricas originales: cada una se obtiene sumando o restando $2\pi$ a una o más articulaciones, dentro del rango permitido por sus límites, sin alterar la pose alcanzada por el efector final. Es decir, las 512 soluciones se agrupan en 8 familias de 64 configuraciones articulares que llevan al manipulador exactamente al mismo punto, difiriendo únicamente en el número de vueltas completas dado por cada articulación.
 
 La metodología elegida para formar soluciones coherentes es:
 
@@ -1077,6 +1078,104 @@ A continuación, se presentan imágenes de la forma genérica de cada matriz.
 La verificación de funcionamiento de la cinemática inversa se explica en \ref{ap:IK}.
 
 % ======================================================================
+\subsection{Convenciones de representación cartesiana}
+\label{sec:convenciones_cartesianas}
+
+A lo largo del trabajo, las coordenadas cartesianas se expresan respecto del sistema de referencia $\{S_0\}$, ubicado en el centro de la superficie de la base que tiene contacto con la plataforma de apoyo. Las coordenadas $(x, y, z)$ hacen referencia a la posición del TCP (\textit{Tool Center Point}), mientras que la orientación se expresa mediante la convención \textit{RPY} (Roll--Pitch--Yaw) respecto a los ejes de dicho sistema.
+
+La convención RPY adoptada define tres rotaciones sucesivas aplicadas sobre ejes móviles:
+\begin{enumerate}
+    \item \textbf{Roll} ($\alpha$): rotación en torno al eje $x$ de $\{S_0\}$.
+    \item \textbf{Pitch} ($\beta$): rotación en torno al nuevo eje $y$, resultado de la rotación anterior.
+    \item \textbf{Yaw} ($\gamma$): rotación en torno al nuevo eje $z$, resultado de las dos rotaciones anteriores.
+\end{enumerate}
+
+La matriz de rotación resultante se obtiene como el producto:
+\begin{equation}
+    \mathbf{R} = \mathbf{R}_x(\alpha)\,\mathbf{R}_y(\beta)\,\mathbf{R}_z(\gamma).
+\end{equation}
+
+Un ejemplo relevante para la tarea de transferencia es la configuración con el efector final apuntando hacia abajo. Dicha orientación se alcanza con una rotación de $\pi$ en torno al eje $y$ (Pitch) o en torno al eje $x$ (Roll). En esta configuración, el valor del Yaw ($\gamma$) resulta independiente: cualquier rotación en torno al eje $z$ mantiene el efector apuntando hacia abajo, dado que ese eje queda alineado con la vertical del sistema $\{S_0\}$.
+
+%
+% ============
+%
+\subsection{Análisis y verificación de espacio de trabajo}
+\label{sec:espacio_trabajo}
+
+Con el objetivo de verificar el espacio de trabajo del manipulador con foco en la tarea definida, se realiza un barrido de puntos en dos planos de interés: el plano $x$-$y$ a la altura de las cajas, que permite evaluar el alcance en el plano horizontal donde se desarrolla la transferencia, y el plano $x$-$z$ perpendicular a las cajas, que permite analizar la cobertura en profundidad necesaria para las maniobras de \textit{picking} y \textit{placement}.
+
+\subsubsection*{Primera iteración: orientación fija}
+
+El barrido se realiza con un paso de 1\,cm sobre las zonas de ambas cajas, con orientación de tarea fija (efector apuntando hacia abajo, RPY~$\approx(0°,\,180°,\,0°)$), verificando la alcanzabilidad de cada punto mediante la resolución de la cinemática inversa. Se distinguen dos tipos de barrido:
+
+\begin{itemize}
+    \item \textbf{Vista superior (plano $x$-$y$):} se barren las zonas de ambas cajas --- caja de origen ($x \in [0.12,\,0.32]$\,m, $y \in [0.075,\,0.30]$\,m) y caja de destino ($x \in [-0.32,\,-0.12]$\,m, $y \in [0.075,\,0.30]$\,m) --- para tres alturas representativas: $z = 0$, $0.15$ y $0.25$\,m.
+    \item \textbf{Vista lateral (plano $x$-$z$):} se barren los mismos rangos en $x$ de cada caja con $z \in [0,\,0.25]$\,m, para tres valores de profundidad: $y = 0.10$, $0.15$ y $0.25$\,m.
+\end{itemize}
+
+El resultado de esta primera iteración pone de manifiesto una limitación: con orientación fija, existen puntos dentro de la zona de la tarea que resultan inalcanzables por el manipulador. Esto puede observarse en la figura~\ref{fig:workspace_iter1}, correspondiente a la vista superior con $z = 0$, donde se identifican puntos no alcanzables en los bordes de las cajas.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.85\linewidth]{ws_fail.png}
+    \caption{Vista superior del espacio de trabajo ($z = 0$\,m) con orientación fija. Se identifican puntos inalcanzables en la zona de la tarea.}
+    \label{fig:workspace_iter1}
+\end{figure}
+
+Este resultado requiere una solución: flexibilizar la orientación del efector final para ampliar el conjunto de configuraciones alcanzables en la zona de interés.
+
+\subsubsection*{Segunda iteración: orientación aleatoria ante fallo}
+
+Se repite el mismo barrido con idénticos rangos y paso, manteniendo la orientación de tarea como primera opción. Cuando un punto no puede ser alcanzado con dicha orientación, se itera aleatoriamente sobre los tres ángulos RPY hasta un máximo de 20 intentos, verificando en cada uno si la cinemática inversa admite solución. El punto se clasifica como alcanzable si al menos uno de los intentos produce una solución válida.
+
+El resultado es satisfactorio: la totalidad de los puntos de la zona de tarea resultan alcanzables. Las figuras~\ref{fig:ws_vs_0} a \ref{fig:ws_vl_25} presentan los resultados para las vistas superior y lateral en todos los planos evaluados.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.85\linewidth]{ws_vs_0.png}
+    \caption{Vista superior del espacio de trabajo, $z = 0$\,m.}
+    \label{fig:ws_vs_0}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.85\linewidth]{ws_vs_15.png}
+    \caption{Vista superior del espacio de trabajo, $z = 0.15$\,m.}
+    \label{fig:ws_vs_15}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.85\linewidth]{ws_vs_25.png}
+    \caption{Vista superior del espacio de trabajo, $z = 0.25$\,m.}
+    \label{fig:ws_vs_25}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.85\linewidth]{ws_vl_10.png}
+    \caption{Vista lateral del espacio de trabajo, $y = 0.10$\,m.}
+    \label{fig:ws_vl_10}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.85\linewidth]{ws_vl_15.png}
+    \caption{Vista lateral del espacio de trabajo, $y = 0.15$\,m.}
+    \label{fig:ws_vl_15}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.85\linewidth]{ws_vl_25.png}
+    \caption{Vista lateral del espacio de trabajo, $y = 0.25$\,m.}
+    \label{fig:ws_vl_25}
+\end{figure}
+
+Se concluye que el manipulador es capaz de cubrir la totalidad de la zona de trabajo requerida por la tarea. Como trabajo futuro, queda pendiente verificar que las orientaciones alternativas encontradas durante el barrido aleatorio no generen colisiones entre el efector final y los bordes de las cajas, lo que requeriría incorporar restricciones geométricas en el proceso de selección de orientación.
+
+% ======================================================================
 \subsection{Análisis de singularidades}
 \label{sec:analisis_singularidades}
 
@@ -1084,7 +1183,7 @@ Las singularidades representan configuraciones en las que un manipulador robóti
 En un robot de seis grados de libertad, estas configuraciones se identifican a partir del análisis del Jacobiano geométrico $\mathbf{J}(\mathbf{q})$, cuya pérdida de rango completo indica la presencia de una singularidad. Formalmente, una configuración $\mathbf{q} \in \mathbb{R}^6$ es singular si y solo si
 
 \begin{equation}
-    \det\bigl(\mathbf{J}(\mathbf{q})\bigr) = 0.
+    \det\bigl(\mathbf{J}(\mathbf{q})\bigr) = 0
 \end{equation}
 
 En estas configuraciones, el robot exhibe dos consecuencias prácticas críticas: la imposibilidad de generar velocidades cartesianas en determinadas direcciones y la amplificación teóricamente ilimitada de velocidades articulares ante pequeñas velocidades cartesianas en las direcciones próximas al espacio nulo del Jacobiano. Por este motivo, la detección y el tratamiento de singularidades son requisitos indispensables en la planificación de trayectorias y en el control de manipuladores industriales.
@@ -1119,11 +1218,11 @@ articulares del robot.
     
 \end{itemize}
 
-La verificación de las singularidades se explica en \ref{ap:SINGULARIDADES}
+La verificación de las singularidades se explica en \ref{ap:SINGULARIDADES}.
 
 % ======================================================================
 \newpage
-\section{Planificación de trayectorias}
+\section{Generación de trayectorias}
 \label{sec:planificacion_trayectorias}
 
 %
@@ -1150,7 +1249,7 @@ Si el modo es 0, el primer paso es empaquetar todos los puntos vías consecutivo
 
 En el otro caso, cuando el modo es 1, la interpolación se da en el espacio cartesiano por lo que simplemente se envía el punto objetivo al interpolador en espacio cartesiano provisto en el toolbox \textit{ctraj} en conjunto con la ley de movimiento definida en \textit{s}. La ley de movimiento se calcula de modo que el tiempo total del movimiento quede definido por el parámetro más comprometido (vmax, amax, wmax, alphamax). 
 
-En ambos casos, al calcular la trayectoria, esta se acopla a continuación de la trayectoria ya definida en una matriz. El último elemento de esta matriz se utiliza punto inicial de la siguiente interpolación, en el caso de que esté vacía, es decir, que sea la primera interpolación, se utilizará el argumento \textbf{q0}.
+En ambos casos, al calcular la trayectoria, esta se acopla a continuación de la trayectoria ya definida en una matriz. El último elemento de esta matriz se utiliza como punto inicial de la siguiente interpolación, en el caso de que esté vacía, es decir, que sea la primera interpolación, se utilizará el argumento \textbf{q0}.
 
 La validación del funcionamiento del módulo de generación de trayectorias se presenta en el Apéndice~\ref{ap:generacion_trayectorias}.
 
@@ -1213,7 +1312,7 @@ El diseño tridimensional del robot constituye una etapa fundamental para la vis
 La figura~\ref{fig:robot_matlab_completo} muestra el ensamblaje completo del robot
 renderizado en \textit{MATLAB} mediante la toolbox de \textit{Peter Corke}, con los
 marcos de referencia DH superpuestos sobre cada eslabón y con transparencia aplicada
-sobre las mallas STL, lo que permite verificar visualmente la alineación entre los ejes articulares y la geometría de cada pieza. Se incluyen también los sistemas del modelo Dh.
+sobre las mallas STL, lo que permite verificar visualmente la alineación entre los ejes articulares y la geometría de cada pieza. Se incluyen también los sistemas del modelo DH.
 
 \begin{figure}[H]
     \centering
@@ -1305,7 +1404,7 @@ El eslabón 6 corresponde a la herramienta del sistema y no presenta decisiones 
 
 \subsection{Diseño alternativo: apertura unidireccional de eslabones}
 
-En robots de morfología similar al \href{https://www.universal-robots.com/products/ur3e?utm_source=chatgpt.com}{UR3e}, los eslabones se disponen de manera tal que, visto desde el plano lateral, el brazo adopta una forma en \textit{Z}: el eslabón 2 se extiende en un sentido y el eslabón 3 se pliega en sentido opuesto, de forma que los giros de ambas articulaciones se compensan parcialmente entre sí. Esto implica que el aprovechamiento del rango articular de cada junta no es aditivo en la dirección de extensión del brazo.
+En robots de morfología similar al \href{https://www.universal-robots.com/products/ur3e}{UR3e}, los eslabones se disponen de manera tal que, visto desde el plano lateral, el brazo adopta una forma en \textit{Z}: el eslabón 2 se extiende en un sentido y el eslabón 3 se pliega en sentido opuesto, de forma que los giros de ambas articulaciones se compensan parcialmente entre sí. Esto implica que el aprovechamiento del rango articular de cada junta no es aditivo en la dirección de extensión del brazo.
 
 Como alternativa, se diseñó una segunda versión del robot en la que todos los eslabones se abren en el mismo sentido de giro, adoptando una morfología en \textit{C} vista desde el plano lateral. De este modo, el aporte de cada articulación al alcance del efector final es aditivo, lo que permite un mejor aprovechamiento del rango articular disponible.
 
@@ -1327,7 +1426,7 @@ Cabe destacar que esta modificación es estrictamente geométrica: la parametriz
 
 Implementando, de forma conjunta el cálculo de la cinemática inversa y el algoritmo de generación de trayectorias, puede desarrollarse una trayectoria para la tarea la cual luego será simulada y analizada.
 
-Para esto se definen los siguientes puntos vía, cuyas orientaciones corresponden a ángulos de Euler ZYX en grados (la herramienta apunta siempre hacia abajo, $\beta = 180\degree$):
+Para esto se definen los siguientes puntos vía, cuyas orientaciones corresponden a la convención RPY en grados (la herramienta apunta siempre hacia abajo, $\beta = 180\degree$):
 
 \begin{table}[H]
     \centering
@@ -1349,7 +1448,7 @@ Para esto se definen los siguientes puntos vía, cuyas orientaciones corresponde
     \caption{Puntos vía de la tarea de \textit{bin-to-bin transfer}.}
 \end{table}
 
-\text{NOTA:} En el código se realiza la conversión de grados a radianes y, a los valores angulares, se le aplica una pequeña rotación adicional para evitar definir puntos vía que conduzcan a configuraciones singulares.
+\textbf{Nota:} En el código se realiza la conversión de grados a radianes y, a los valores angulares, se le aplica una pequeña rotación adicional para evitar definir puntos vía que conduzcan a configuraciones singulares.
 
 El \textit{script} permite el comienzo desde un punto aleatorio o desde un punto conocido. Se recuerda que, en conjunto con los puntos vías debe ser proporcionada la indicación del método de interpolación a utilizar, la secuencia es la siguiente:
 
@@ -1372,7 +1471,7 @@ A continuación, se presenta una imagen luego de la simulación:
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.85\linewidth]{simulacion_tarea.png}
-    \caption{Imagen del final de la simulacion de la tarea.}
+    \caption{Imagen del final de la simulación de la tarea.}
     \label{fig:simulacion_tarea}
 \end{figure}
 
@@ -1384,13 +1483,13 @@ Luego de la simulación, se obtienen las siguientes gráficas para el análisis 
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.85\linewidth]{tarea_pa.png}
-    \caption{Evolución de posiciones articulares en la simulacion de la tarea.}
+    \caption{Evolución de posiciones articulares en la simulación de la tarea.}
     \label{fig:tarea_pa}
 \end{figure}
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.85\linewidth]{tarea_pc.png}
-    \caption{Evolución de la posición cartesiana del efector final en la simulacion de la tarea.}
+    \caption{Evolución de la posición cartesiana del efector final en la simulación de la tarea.}
     \label{fig:tarea_pc}
 \end{figure}
 \begin{figure}[H]
@@ -1415,7 +1514,7 @@ Luego de la simulación, se obtienen las siguientes gráficas para el análisis 
 \section{Integración en entorno ROS2}
 \label{sec:ROS2}
 
-En esta sección se describe la integración del manipulador en el entorno \textit{Robot Operating System 2} (ROS~2). El objetivo es trasladar el desarrollo realizado en MATLAB ---cinemática directa, cinemática inversa y generación de trayectorias--- a una plataforma de software orientada a sistemas robóticos reales, aportando modularidad, comunicación entre procesos y capacidad de simulación mediante RViz. La totalidad del software ha sido desarrollada de forma propia, sin recurrir a librerías de alto nivel específicas de robótica, con el objetivo de maximizar el aprendizaje obtenido y obtener la mayor flexibilidad posible en el diseño de la arquitectura.
+En esta sección se describe la integración del manipulador en el entorno \textit{Robot Operating System 2} (ROS~2). El objetivo es trasladar el desarrollo realizado en MATLAB ---cinemática directa, cinemática inversa y generación de trayectorias--- a una plataforma de software orientada a sistemas robóticos reales, aportando modularidad, comunicación entre procesos y capacidad de simulación mediante RViz. En la búsqueda de maximizar el aprendizaje y personalización del sistema, se optó por desarrollar la mayoría de los nodos y módulos de forma manual.
 
 La integración se estructura en torno a un conjunto de nodos que encapsulan responsabilidades bien definidas: cálculo cinemático, gestión de trayectorias, \textit{teaching} y visualización a través de una interfaz gráfica. Estos nodos se comunican mediante tópicos y servicios de ROS2, conformando una arquitectura distribuida que permite operar el robot de forma manual o autónoma.
 
@@ -1638,7 +1737,7 @@ Esto puede verse en la siguiente imagen correspondiente al entorno de simulació
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.85\linewidth]{rviz.png}
-    \caption{Modelo URDF visualizado en simulaodr RViz2.}
+    \caption{Modelo URDF visualizado en simulador RViz2.}
     \label{fig:rviz}
 \end{figure}
 
@@ -1737,14 +1836,14 @@ A continuación, se presentan imágenes correspondientes a cada pestaña.
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.85\linewidth]{gui_1.png}
-    \caption{Interfáz gráfica de usuario en ROS 2 - Pestaña de teaching.}
+    \caption{Interfaz gráfica de usuario en ROS 2 - Pestaña de teaching.}
     \label{fig:gui_1}
 \end{figure}
 
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.85\linewidth]{gui_2.png}
-    \caption{Interfáz gráfica de usuario en ROS 2 - Pestaña de ejecución.}
+    \caption{Interfaz gráfica de usuario en ROS 2 - Pestaña de ejecución.}
     \label{fig:gui_2}
 \end{figure}
 
@@ -1766,32 +1865,32 @@ La siguientes imágenes muestran las 4 pestañas de análisis:
 \begin{figure}[H]
     \centering
     \includegraphics[width=1\linewidth]{gui_analisis_1.png}
-    \caption{Interfáz gráfica de usuario - Pestaña de análisis: evolución de coordenadas cartesianas del efector final y coordenadas articulares de articulaciones.}
+    \caption{Interfaz gráfica de usuario - Pestaña de análisis: evolución de coordenadas cartesianas del efector final y coordenadas articulares de articulaciones.}
     \label{fig:gui_analisis_1}
 \end{figure}
 
 \begin{figure}[H]
     \centering
     \includegraphics[width=1\linewidth]{gui_analisis_2.png}
-    \caption{Interfáz gráfica de usuario - Pestaña de análisis: evolución de de velocidad articular y aceleración articular.}
+    \caption{Interfaz gráfica de usuario - Pestaña de análisis: evolución de velocidad articular y aceleración articular.}
     \label{fig:gui_analisis_2}
 \end{figure}
 
 \begin{figure}[H]
     \centering
     \includegraphics[width=1\linewidth]{gui_analisis_3.png}
-    \caption{Interfáz gráfica de usuario - Pestaña de análisis: evolución de velocidad lineal y angular del efector final.}
+    \caption{Interfaz gráfica de usuario - Pestaña de análisis: evolución de velocidad lineal y angular del efector final.}
     \label{fig:gui_analisis_3}
 \end{figure}
 
 \begin{figure}[H]
     \centering
     \includegraphics[width=1\linewidth]{gui_analisis_4.png}
-    \caption{Interfáz gráfica de usuario - Pestaña de análisis: evolulución de aceleración lineal y angular del efector final.}    
+    \caption{Interfaz gráfica de usuario - Pestaña de análisis: evolución de aceleración lineal y angular del efector final.}    
     \label{fig:gui_analisis_4}
 \end{figure}
 
-De la misma manera al análisis en MATLAB, se presentan los valores obtenido en conjunto con sus máximos definidos para poder verificar el funcionamiento.
+De la misma manera que el análisis en MATLAB, se presentan los valores obtenidos en conjunto con sus máximos definidos para poder verificar el funcionamiento.
 
 % ======================================================================
 \newpage
@@ -1890,24 +1989,24 @@ La figura~\ref{fig:verif_an4} presenta la velocidad y aceleración angulares del
     \label{fig:verif_an4}
 \end{figure}
 
-Del análisis se concluye que el ciclo operativo completo resulta en un tiempo de ejecución inferior a 10 segundos, lo que valida el cumplimiento del objetivo de productividad de 300 transferencias por hora. Asimismo, los perfiles de velocidad y aceleración tanto articulares como cartesianos se mantienen dentro de los límites cinemáticos definidos sin superarlos de forma considerable a lo largo de todo el ciclo.
+Del análisis se concluye que el ciclo operativo completo posee una duración de 10 segundos. Este tiempo corresponde al tiempo de recorrido de la trayectoria generada por el sistema de \textit{teaching}, calculado a partir de la cantidad de muestras de la trayectoria a la frecuencia de control definida de 100~Hz, y no a una medición directa sobre hardware real. A partir de este valor, la productividad resultante es de $3600~\text{s}/10~\text{s} = 360$ transferencias por hora, lo que supera el objetivo de productividad establecido de 300 transferencias por hora. Asimismo, los perfiles de velocidad y aceleración tanto articulares como cartesianos se mantienen dentro de los límites cinemáticos definidos sin superarlos de forma considerable a lo largo de todo el ciclo.
 
 % ======================================================================
 \newpage
 \section{Conclusiones y trabajo futuro}
 \label{sec:conclusiones}
 
-El presente trabajo logró cumplir con los objetivos planteados, desarrollando de forma íntegra el modelado cinemático, la simulación y la integración en software de robótica de un manipulador serial de seis grados de libertad orientado a tareas de automatización logística.
+El presente trabajo logró cumplir con los objetivos planteados, abordando el modelado cinemático, la simulación y la integración en software de robótica de un manipulador serial de seis grados de libertad orientado a tareas de automatización logística.
 
 En la etapa de modelado, se aplicó la convención Denavit-Hartenberg para formular la cinemática directa del manipulador y se obtuvo una solución analítica cerrada de la cinemática inversa. Este enfoque, alternativo a los métodos numéricos iterativos, resultó eficaz para el robot estudiado y permitió obtener hasta 512 configuraciones articulares válidas para una misma pose del efector final, brindando una amplia base para la selección de la solución óptima en cada instante de la trayectoria. Se identificaron y caracterizaron analíticamente las tres singularidades geométricas del manipulador: de hombro, de codo y de muñeca.
 
-El módulo de generación de trayectorias incorporó interpolación en espacio articular y cartesiano, con un mecanismo de escalado automático de velocidades y aceleraciones basado en el Jacobiano geométrico, garantizando en todo momento el respeto de los límites cinemáticos del sistema. La simulación de la tarea completa de \textit{bin-to-bin transfer} en MATLAB validó el correcto funcionamiento del conjunto, combinando segmentos de interpolación articular para los desplazamientos rápidos y segmentos de interpolación cartesiana para las maniobras de \textit{picking} y \textit{placing}.
+El módulo de generación de trayectorias incorporó interpolación en espacio articular y cartesiano, con un mecanismo de escalado automático de velocidades y aceleraciones basado en el Jacobiano geométrico, que permitió respetar los límites cinemáticos del sistema en las trayectorias evaluadas. La simulación de la tarea completa de \textit{bin-to-bin transfer} en MATLAB permitió verificar el funcionamiento del conjunto, combinando segmentos de interpolación articular para los desplazamientos rápidos y segmentos de interpolación cartesiana para las maniobras de \textit{picking} y \textit{placing}.
 
 El diseño CAD de los eslabones en \textit{Fusion 360} y su integración como mallas STL al entorno de simulación permitió verificar visualmente la coherencia geométrica entre el modelo cinemático y la representación tridimensional del robot.
 
-Finalmente, la integración en ROS~2 trasladó toda la cadena cinemática a una arquitectura de nodos distribuida, desarrollada íntegramente desde cero y sin dependencias de librerías de robótica de alto nivel. Se implementaron interfaces de comunicación personalizadas, un modelo URDF derivado directamente de la parametrización DH, visualización en RViz2 y una interfaz gráfica de usuario en PyQt5 que centraliza el movimiento manual, la enseñanza de puntos, la gestión de trayectorias y el análisis de variables cinemáticas.
+Finalmente, la integración en ROS~2 trasladó la cadena cinemática a una arquitectura de nodos distribuida. En ROS~2 se implementaron módulos propios de cinemática y generación de trayectorias e interfaces de comunicación, mientras que MATLAB se utilizó como entorno de modelado y validación apoyado en la \textit{Robotics Toolbox} de Peter Corke, no disponible en el entorno Python de ROS~2. Se completó además un modelo URDF derivado directamente de la parametrización DH, visualización en RViz2 y una interfaz gráfica de usuario en PyQt5 que centraliza el movimiento manual, la enseñanza de puntos, la gestión de trayectorias y el análisis de variables cinemáticas.
 
-Se verificó la funcionalidad completa del sistema en este entorno y se validó el cumplimiento de los objetivos de productividad establecidos para la tarea. Como limitación identificada en esta etapa, el servicio de generación de trayectorias acepta un único punto por solicitud, lo que impide la interpolación continua entre puntos vía consecutivos y obliga al robot a detenerse en cada punto intermedio, a diferencia del comportamiento logrado en MATLAB.
+Se verificó el funcionamiento del sistema en este entorno y se evaluó el cumplimiento de los objetivos de productividad establecidos para la tarea. Como limitación identificada en esta etapa, el servicio de generación de trayectorias acepta un único punto por solicitud, lo que impide la interpolación continua entre puntos vía consecutivos y obliga al robot a detenerse en cada punto intermedio, a diferencia del comportamiento logrado en MATLAB.
 
 \subsection*{Trabajo futuro}
 
@@ -1925,7 +2024,51 @@ A partir del estado actual del desarrollo, se identifican las siguientes líneas
 
     \item \textbf{Robustez del sistema.} Mejorar el manejo de errores en los nodos de ROS~2 incorporando reintentos con \textit{timeout}, recuperación ante fallos de servicio y retroalimentación más detallada hacia la interfaz gráfica. Incorporar métricas de tiempo de ejecución por segmento de trayectoria para facilitar el ajuste fino de los perfiles de velocidad en función de los requerimientos de productividad.
 
+    \item \textbf{Visión artificial y generación de trayectorias reactivas.} Integrar un módulo de visión artificial —basado en una cámara RGB-D y un algoritmo de estimación de pose— que permita detectar en tiempo de ejecución la posición y orientación real de cada pieza dentro de la caja de origen, así como el espacio disponible en la caja de destino. A partir de esta información, el generador de trayectorias produciría una \textit{trayectoria reactiva} adaptada a la pose detectada en cada ciclo, en lugar de depender de posiciones predefinidas. Esta extensión completaría el sistema de transferencia descrito en la sección \ref{sec:tarea_especificaciones_robot}, donde la visión artificial y la trayectoria reactiva quedaron reservadas para desarrollos posteriores.
+
+    \item \textbf{Planificador de trayectoria nominal/reactiva.} Desarrollar un planificador de alto nivel que gestione la transición entre la \textit{trayectoria nominal} —precomputada y optimizada para maximizar la productividad— y la \textit{trayectoria reactiva} —generada en línea a partir de la detección visual—. El planificador determinaría cuándo activar cada modo en función del estado del sistema y garantizaría continuidad en velocidad y aceleración durante la conmutación entre ambos regímenes. Esta capa de coordinación constituye el tercer componente del sistema de transferencia identificado en el alcance original del trabajo.
+
 \end{enumerate}
+
+% ======================================================================
+\section{Uso de agentes de inteligencia artificial}
+\label{sec:uso_ia}
+
+A lo largo del desarrollo de este trabajo se ha utilizado inteligencia artificial generativa como herramienta de apoyo en múltiples etapas del proceso. Su incorporación permitió automatizar y mejorar tareas de diversa índole: el desarrollo y refinamiento de algoritmos, la generación de visualizaciones, la verificación de errores lógicos en el código, la redacción y estructuración del presente informe, entre otras. En todos los casos, el uso de estas herramientas se realizó de forma supervisada, validando los resultados obtenidos antes de su incorporación al trabajo.
+
+Las herramientas utilizadas fueron:
+
+\begin{itemize}
+    \item Claude (Anthropic)
+    \item Gemini (Google)
+\end{itemize}
+
+\subsection{Metodología de uso de inteligencia artificial}
+
+El uso de inteligencia artificial a lo largo del proyecto se ha llevado a cabo mediante un enfoque de \textit{cápsulas}: las tareas encomendadas a los agentes fueron deliberadamente limitadas y acotadas tanto en objetivo como en alcance. Esta metodología busca evitar que la incorporación de IA conduzca a la generación de código complejo de desarrollo ajeno, que dificulte la comprensión del programa, complique futuras modificaciones y entorpezca la búsqueda de errores. Bajo este enfoque, cada interacción con el agente se planteó como una tarea concreta y bien definida, cuyo resultado fue revisado e integrado de forma consciente por el autor.
+
+\subsection{MATLAB}
+
+En el desarrollo de los módulos de MATLAB, el uso de agentes de IA se limitó a la búsqueda de errores lógicos en el código, la mejora de las visualizaciones obtenidas y la discusión sobre posibles mejoras, cambios e ideas para expandir el trabajo o refinar los resultados. Los algoritmos, la lógica de cada módulo y las decisiones de diseño fueron desarrollados de forma íntegra por el autor, utilizando al agente como interlocutor crítico más que como generador de soluciones.
+
+\subsection{ROS~2}
+
+En el desarrollo del sistema en ROS~2 el uso de agentes de IA fue similar al descripto para MATLAB, con el agregado de que se recurrió a ellos para la identificación y resolución de errores de mayor complejidad técnica, tales como problemas de sincronicidad y paralelismo entre hilos de ejecución. En estos casos, las soluciones propuestas por el agente fueron analizadas en detalle por el autor con el objetivo de comprender el origen del problema y adquirir el conocimiento asociado, evitando incorporar correcciones sin entender su fundamento.
+
+Como excepción al enfoque de cápsulas descripto, la implementación de la interfaz gráfica (GUI) constituye un desarrollo realizado íntegramente por un agente de IA. Dicho desarrollo fue analizado por el autor a grandes rasgos para comprender su funcionamiento general, pero se considera un material cuya implementación interna queda fuera del alcance técnico detallado del presente trabajo.
+
+\subsection{Desarrollo del informe}
+
+
+Para la redacción del presente informe se utilizaron agentes de IA con el objetivo de automatizar la generación de texto a partir de explicaciones provistas por el autor. El enfoque consistió en transmitir al agente la idea, concepto o descripción a desarrollar, para que este produzca un texto coherente, bien estructurado y sin errores gramaticales, incluyendo la referenciación de imágenes, secciones y ecuaciones dentro del documento. Posteriormente, el autor realizó una verificación de la calidad técnica del texto generado, corrigiendo o ajustando aquellos aspectos que no reflejaran con precisión el contenido del trabajo.
+
+\subsection{Uso general}
+
+De forma transversal a todas las etapas del proyecto, los agentes de IA fueron utilizados como herramienta de consulta general: para obtener explicaciones sobre conceptos técnicos, recibir sugerencias frente a decisiones de diseño, explorar alternativas de implementación y ampliar el entendimiento de temas relacionados con el trabajo.
+
+\subsection{Formato de implementación}
+
+Las herramientas de IA no se utilizaron de forma uniforme en todos los contextos. En los apartados de MATLAB, ROS~2 y desarrollo del informe se empleó \textbf{Claude Code} (interfaz de línea de comandos de Anthropic, integrada al entorno de desarrollo) en conjunto con \textbf{Claude} vía web (\texttt{claude.ai}). Para el uso general --- consultas, explicaciones y sugerencias --- se recurrió a \textbf{Claude} vía web junto con \textbf{Google Gemini} (\texttt{gemini.google.com}).
 
 % ======================================================================
 \newpage
@@ -1947,7 +2090,7 @@ q = [1.8358    0.4922   -1.9151   -0.5557    1.7815    1.2078];
 % Las coordenadas cartesianas consigna (calculadas mediante DK) son: 
 x = -0.16918 | y = -0.19848 | z = 0.29694 | alpha = 2.7989 | beta = -0.3074 | gamma = 2.2087
 % ==OUTPUT==
-% Las coordenadas articulares solución obtenidas de la cinematica inversa son (solo algunas):
+% Las coordenadas articulares solución obtenidas de la cinemática inversa son (solo algunas):
 1.8358    0.4922   -1.9151   -0.5557    1.7815    1.2078
 -4.4474    0.4922   -1.9151   -0.5557    1.7815    1.2078
 -4.4474   -0.2860   -1.5354    2.9844    4.5017    4.3494
@@ -1969,7 +2112,7 @@ Sin solución IK:    0
   Error orientación - max: 1.10e-05 rad  prom: 6.20e-06 rad
 \end{lstlisting}
 
-    \item \textbf{Cálculo directo: } Esta funcionalidad no se define específicamente para realizar una verificación sino para  conocer las coordenadas articulares solución de la cinemática inversa a partir de la coordenada cartesiana ingresada de forma directa. Los resultados se presentan de misma forma al ítem 1 dado que solo se realiza un \textit{override} durante ejecución de la coordenada cartesiana de entrada.
+    \item \textbf{Cálculo directo: } Esta funcionalidad no se define específicamente para realizar una verificación sino para  conocer las coordenadas articulares solución de la cinemática inversa a partir de la coordenada cartesiana ingresada de forma directa. Los resultados se presentan de la misma forma que el ítem 1 dado que solo se realiza un \textit{override} durante ejecución de la coordenada cartesiana de entrada.
     \item \textbf{Verificación cíclica: } Esta funcionalidad permite, hasta que se detenga la ejecución del programa, verificar cíclicamente puntos aleatorios mediante un esquema de verificación similar al del ítem 1. De forma adicional, se calcula la norma entre coordenadas cartesianas de salida y de llegada, ante una diferencia mayor a un umbral determinado en cualquiera de las soluciones pertenecientes al conjunto de solución obtenido, se detiene el programa para verificar el error y poder analizarlo.
 \begin{lstlisting}[style=Matlab-editor, basicstyle=\small\ttfamily]
 % ==INPUT ==
@@ -1979,7 +2122,7 @@ Sin solución IK:    0
 % LOOP -> Las coordenadas cartesianas consigna son: 
 x = 0.10246 | y = -0.40972 | z = 0.45372 | alpha = 3.0035 | beta = 0.83783 | gamma = 1.3635
 % ==OUTPUT==
-% Las coordenadas articulares solución obtenidas de la cinematica inversa son (solo algunas):
+% Las coordenadas articulares solución obtenidas de la cinemática inversa son (solo algunas):
 3.0372    0.7669   -1.7414   -0.5041    0.7282   -3.1416
 -3.2460   -5.5163    4.5418    5.7791   -5.5550   -3.1416
 -3.2460   -6.2786    5.0711   -3.4127   -0.7282         0
@@ -2004,7 +2147,7 @@ Para verificar que los patrones que conducen a singularidades determinados visua
 Para la singularidad de codo y de muñeca, se definen valores aleatorios para todas las variables articulares que no estén involucradas en el patrón de la singularidad, para las que sí están involucradas, se define un valor aleatorio dentro del conjunto de aquellos valores que puedan provocar la singularidad según las condiciones definidas en~\ref{sec:analisis_singularidades}.
 
 
-Para la singularidad de hombro, debido a la presencia de 3 incógnitas en una misma ecuación, simplemente se busca verificar la observación, para esto, se dan valores aleatorios dentro de un rango de $\pm10º$ y con signo opuesto para $q_2$ y $q_3$, finalmente se busca el valor de $q_4$ que cumpla con la condición de proyección nula. El motivo por el que los valores para $q_2$ y $q_3$ están dentro del rango $\pm10º$ y de signo opuesto, es para evitar que la proyección no sea anulable geométricamente mediante $q_4$.
+Para la singularidad de hombro, debido a la presencia de 3 incógnitas en una misma ecuación, simplemente se busca verificar la observación, para esto, se dan valores aleatorios dentro de un rango de $\pm10\degree$ y con signo opuesto para $q_2$ y $q_3$, finalmente se busca el valor de $q_4$ que cumpla con la condición de proyección nula. El motivo por el que los valores para $q_2$ y $q_3$ están dentro del rango $\pm10\degree$ y de signo opuesto, es para evitar que la proyección no sea anulable geométricamente mediante $q_4$.
 
 
 Para cada caso, se calcula el jacobiano en la configuración determinada y su determinante, solo en caso de que el determinante del jacobiano sea mayor al valor de umbral, de modo que no se considere cercano a una singularidad, se detiene la ejecución y se muestra información, caso contrario, la ejecución se repite cíclicamente informando cuando se completa cada ciclo. Un ciclo equivale al análisis de una configuración para el codo, una para la muñeca y una para el hombro.
@@ -2032,8 +2175,8 @@ El último ejemplo, correspondiente a una salida negativa, se produjo exigiendo 
 En la generación de trayectorias se buscan verificar dos aspectos fundamentales: que la trayectoria generada efectivamente interpole entre los puntos vía definidos y que el perfil de velocidades y aceleraciones resultante respete los límites cinemáticos establecidos. Para esto se elabora el script \colorbox{gray!20}{\texttt{test\_gen\_traj.m}} que contiene el siguiente procedimiento de verificación:
 Se definen manualmente una serie de puntos vía con sus respectivos modos de interpolación (articular o cartesiano) y se genera la trayectoria utilizando el módulo desarrollado y se verifica:
 \begin{enumerate}
-    \item \textbf{Interpolación entre puntos vía:}  Se verifica que la trayectoria resultante efectivamente pase por cada uno de los puntos vía definidos, para esto, se calcula la distancia entre cada punto vía y el punto de la trayectoria correspondiente al mismo tiempo, verificando que esta distancia sea menor a un umbral determinado. En caso de detectar una cercanía lo suficientemente pequeña, se considera que el punto vía ha sido interpolado correctamente y se incrementa un contador.La verificación será positiva siempre que el contador sea mayor o igual al número total de puntos vía definidos.
-    \item \textbf{Cumplimiento de límites cinemáticos:} Se imprime la comparativa entre valores máximos, perfiles cinemáticos iniciales y perfiles cinemáticos escalados para cumplir con límites. Se verifica: velocidad y aceleración angular de articulaciones, velocidad y aceleración líneal y angular de efector final. De este modo, la verificación será visual.
+    \item \textbf{Interpolación entre puntos vía:}  Se verifica que la trayectoria resultante efectivamente pase por cada uno de los puntos vía definidos, para esto, se calcula la distancia entre cada punto vía y el punto de la trayectoria correspondiente al mismo tiempo, verificando que esta distancia sea menor a un umbral determinado. En caso de detectar una cercanía lo suficientemente pequeña, se considera que el punto vía ha sido interpolado correctamente y se incrementa un contador. La verificación será positiva siempre que el contador sea mayor o igual al número total de puntos vía definidos.
+    \item \textbf{Cumplimiento de límites cinemáticos:} Se imprime la comparativa entre valores máximos, perfiles cinemáticos iniciales y perfiles cinemáticos escalados para cumplir con límites. Se verifica: velocidad y aceleración angular de articulaciones, velocidad y aceleración lineal y angular de efector final. De este modo, la verificación será visual.
 \end{enumerate}
 
 Como complemento numérico a la verificación visual descripta, se presenta a continuación la salida del script \colorbox{gray!20}{\texttt{test\_gen\_traj.m}} para una trayectoria de prueba, donde se verifica el alcance los puntos vía y se contrastan los límites articulares y cinemáticos establecidos con los valores máximos efectivamente alcanzados a lo largo de la trayectoria escalada:
@@ -2199,21 +2342,6 @@ Pearson, 2021.
 Peter Corke.  
 \textit{Robotics, Vision and Control: Fundamental Algorithms in MATLAB} (2nd ed.).  
 Springer, 2023.  
-
-\bibitem{ashby2022}
-Michael F. Ashby.  
-\textit{Materials Selection in Mechanical Design} (6th ed.).  
-Elsevier, 2022.  
-
-\bibitem{bathe2006}
-Klaus-Jürgen Bathe.  
-\textit{Finite Element Procedures}.  
-Prentice Hall, 2006.  
-
-\bibitem{krishnan2017}
-Ramu Krishnan.  
-\textit{Permanent Magnet Brushless DC Motor Drives and Controls}.  
-CRC Press, 2017. 
 
 \bibitem{martinez2024}
 Aaron Martínez \& Enrique Fernández.  

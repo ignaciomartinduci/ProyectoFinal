@@ -14,7 +14,8 @@ eps = 10^-6;
 base = [R.base.n R.base.o R.base.a R.base.t; [0 0 0 1]];
 tool = [R.tool.n R.tool.o R.tool.a R.tool.t; [0 0 0 1]];
 
-T_06 = transl(x_t,y_t,z_t) * trotz(gamma)*troty(beta)*trotx(alpha); % RPY ZYX
+% T_06 = transl(x_t,y_t,z_t); % * trotz(gamma)*troty(beta)*trotx(alpha); % RPY ZYX
+T_06 = transl(x_t, y_t,z_t) * rpy2tr([alpha beta gamma],'zyx');
 T_06_full = T_06;
 T_06 = base \ T_06_full / tool;
 r_11 = T_06(1,1);

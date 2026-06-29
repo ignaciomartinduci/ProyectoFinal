@@ -3,15 +3,15 @@
 <package format="3">
   <name>dr_interfaces</name>
   <version>0.0.0</version>
-  <description>Proyecto Final de Estudios - Ignacio Martín Duci - Legajo: 13560</description>
-  <maintainer email="ignaciomartind@todo.todo">ignaciomartind</maintainer>
-  <license>TODO: License declaration</license>
+  <description>Mensajes, servicios y acciones personalizados utilizados por los nodos del sistema de control del robot DR.</description>
+  <maintainer email="ignacio8martin@gmail.com">ignaciomartind</maintainer>
+  <license>MIT</license>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
 
   <build_depend>rosidl_default_generators</build_depend>
   <exec_depend>rosidl_default_runtime</exec_depend>  
-  <member_of_group>rosidl_interface_packages</member_of_group> # ROSIDL: ROS Interface Definition Language 
+  <member_of_group>rosidl_interface_packages</member_of_group>
 
   <test_depend>ament_lint_auto</test_depend>
   <test_depend>ament_lint_common</test_depend>

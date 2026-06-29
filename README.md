@@ -118,7 +118,14 @@ docker compose up
 Dentro de la sesión que se abre:
 
 ```bash
+# Normal
 ros2 launch dr_bringup dr.launch.py
+
+# Debug
+ros2 launch dr_bringup dr.launch.py debug:=true
+
+# Debug verbose (alta frecuencia)
+ros2 launch dr_bringup dr.launch.py debug:=true debug_verbose:=true
 ```
 
 **Terminal 2** — abre una segunda sesión sobre el mismo contenedor para la visualización en RViz:

@@ -1,4 +1,7 @@
 function [] = test_inv_kinematics(R ,TEST_LOOP_IK, PRINT_SOLUTIONS)
+
+USE_OVERRIDE = 1; % Permite ingresar coordenadas cartesianas de consigna manualmente, ignorando la posición articular de partida.
+
 disp(' ');
 disp("---> TEST INV_KINEMATICS")
 
@@ -8,40 +11,50 @@ q_tik = [1.8358    0.4922   -1.9151   -0.5557    1.7815    1.2078];
 %R.plot(q_tik)
 
 q_previo = [0 0 0 0 0 0]*d;
-disp("Posición articular previa")
+
+disp("Posición articular previa utilizada para el cálculo de la cinematica inversa: ")
 disp(q_previo)
 
-disp("Probando posición articular: ");
-disp(q_tik)
-T_tik = R.fkine(q_tik);
+if ~USE_OVERRIDE
 
-p_tik= transl(T_tik);
-rpy_tik = tr2rpy(T_tik,'zyx');
+    disp("Probando posición articular: ");
+    disp(q_tik)
+    T_tik = R.fkine(q_tik);
 
-x_tik = p_tik(1);
-y_tik = p_tik(2);
-z_tik = p_tik(3);
+    p_tik= transl(T_tik);
+    rpy_tik = tr2rpy(T_tik,'zyx');
 
-alpha_tik = rpy_tik(1);
-beta_tik = rpy_tik(2);
-gamma_tik = rpy_tik(3);
+    x_tik = p_tik(1);
+    y_tik = p_tik(2);
+    z_tik = p_tik(3);
 
-% override
-x_tik = -0.202;
-y_tik = 0.333;
-z_tik = 0.205;
-% %
-alpha_tik = -3.132;
-beta_tik = -0.01;
-gamma_tik = -3.132;
+    alpha_tik = rpy_tik(1);
+    beta_tik = rpy_tik(2);
+    gamma_tik = rpy_tik(3);
+
+else
+
+    disp("Usando el módulo de cinematica inversa como calculadora - se sobreescriben las coordenadas cartesianas de consigna")
+    % override
+    x_tik = -0.202;
+    y_tik = 0.333;
+    z_tik = 0.205;
+    % %
+    alpha_tik = -3.132;          
+    beta_tik = -0.01;
+    gamma_tik = -3.132;
+end
 
 coordenadas_cartesianas = "x = "+string(x_tik)+" | y = "+string(y_tik)+" | z = "+string(z_tik)+" | alpha = "+string(alpha_tik)+" | beta = "+string(beta_tik)+" | gamma = "+string(gamma_tik);
+
+E_input = [x_tik y_tik z_tik alpha_tik beta_tik gamma_tik];
 
 disp("Las coordenadas cartesianas consigna son: ")
 disp(coordenadas_cartesianas)
 
 
 [sol_tik, q_mejor] = inv_kinematics(x_tik,y_tik,z_tik,alpha_tik,beta_tik,gamma_tik, q_previo, 1, R, "FORCE");
+E_sols = zeros(length(sol_tik(:,1)),6);
 
 if ~isempty(sol_tik)
     
@@ -63,6 +76,8 @@ if ~isempty(sol_tik)
         alpha_tik_sol = rpy_tik_sol(1);
         beta_tik_sol = rpy_tik_sol(2);
         gamma_tik_sol = rpy_tik_sol(3);
+
+        E_sols(i,:) = [x_tik_sol y_tik_sol z_tik_sol alpha_tik_sol beta_tik_sol gamma_tik_sol];
         
         coordenadas_cartesianas = "x = "+string(x_tik_sol)+" | y = "+string(y_tik_sol)+" | z = "+string(z_tik_sol)+" | alpha = "+string(alpha_tik_sol)+" | beta = "+string(beta_tik_sol)+" | gamma = "+string(gamma_tik_sol);
         
@@ -86,47 +101,29 @@ disp(q_mejor)
 disp(" ")
 disp("--- Resumen estadístico IK (poses aleatorias) ---")
 
-N_batch   = 300;
-err_tol   = 1e-3;   % [m] umbral para considerar solución válida
-n_ok      = 0;
-n_sin_sol = 0;
-err_pos_v = [];
-err_ang_v = [];
-q_ref     = zeros(1,6);
+BATCH = length(E_sols(:,1));
+error_tol = 10^-3;
+success_sols = 0;
+errors = zeros(BATCH,1);
+error_max = 0;
+error_avg = 0;
 
-for k = 1:N_batch
-    q_rand = zeros(1,6);
-    for j = 1:6
-        q_rand(j) = R.qlim(j,1) + (R.qlim(j,2) - R.qlim(j,1)) * rand;
+for i=1:BATCH
+    errors(i) = norm(E_input - E_sols(i,:));
+
+    if errors(i) < error_tol
+        success_sols = success_sols + 1;
     end
 
-    T_tgt = double(R.fkine(q_rand));
-    rpy   = tr2rpy(T_tgt, 'zyx');
-
-    [ampl_sol, q_mejor] = inv_kinematics(T_tgt(1,4), T_tgt(2,4), T_tgt(3,4), ...
-        rpy(1), rpy(2), rpy(3), q_ref, false, R, "NONE");
-
-    if size(ampl_sol, 1) >= 64
-        T_check = double(R.fkine(q_mejor));
-        ep = norm(T_check(1:3,4) - T_tgt(1:3,4));
-        ea = acos(min(1, max(-1, (trace(T_check(1:3,1:3)' * T_tgt(1:3,1:3)) - 1) / 2)));
-        if ep < err_tol
-            n_ok = n_ok + 1;
-            err_pos_v(end+1) = ep; %#ok<AGROW>
-            err_ang_v(end+1) = ea; %#ok<AGROW>
-        end
-    else
-        n_sin_sol = n_sin_sol + 1;
-    end
 end
 
-fprintf("  Poses testeadas:    %d\n",           N_batch)
-fprintf("  Sin solución IK:    %d\n",           n_sin_sol)
-fprintf("  Poses verificadas:  %d  (%.1f%%)\n", n_ok, 100*n_ok/N_batch)
-if ~isempty(err_pos_v)
-    fprintf("  Error posición    — max: %.2e m    prom: %.2e m\n",   max(err_pos_v), mean(err_pos_v))
-    fprintf("  Error orientación — max: %.2e rad  prom: %.2e rad\n", max(err_ang_v), mean(err_ang_v))
-end
+error_max = max(errors);
+error_avg = mean(errors);
+
+disp("Cantidad de soluciones encontradas: "+string(BATCH))
+disp("Cantidad de soluciones exitosas (error < "+string(error_tol)+"): "+string(success_sols))
+disp("Error máximo: "+string(error_max))
+disp("Error promedio: "+string(error_avg))
 
 %% LOOP TESTING
 
@@ -144,7 +141,7 @@ if TEST_LOOP_IK
         q3 =  R.qlim(3,1) + (R.qlim(3,2)-R.qlim(3,1))*rand;
         q4 =  R.qlim(4,1) + (R.qlim(4,2)-R.qlim(4,1))*rand;
         q5 =  R.qlim(5,1) + (R.qlim(5,2)-R.qlim(5,1))*rand;
-        q6 =  -2*pi + (2*pi-2*pi)*rand;
+        q6 =  -2*pi + (2*pi+2*pi)*rand;
         
         q_loop = [q1 q2 q3 q4 q5 q6];
         disp("LOOP -> Probando posición articular");

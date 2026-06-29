@@ -1,3 +1,25 @@
+# Copyright 2026 Ignacio Martín Duci
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to
+# deal in the Software without restriction, including without limitation the
+# rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+# sell copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+# FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+# DEALINGS IN THE SOFTWARE.
+
+import os
+import sys
 import threading
 import rclpy
 from rclpy.node import Node
@@ -55,6 +77,8 @@ class GenTrajNode(Node):
 
         self._init_timer = self.create_timer(0.1, self._init_c0, callback_group=self.cb_group)
         self.get_logger().info('GenTraj node iniciado.')
+        if os.environ.get('DR_DEBUG') == '1':
+            print('\033[92mNODO gen_traj_node INICIADO CORRECTAMENTE\033[0m  srv: /dr/gen_traj  |  sub: /dr/robot_state', file=sys.stderr)
 
     def _init_c0(self):
         self._init_timer.cancel()
@@ -70,7 +94,9 @@ class GenTrajNode(Node):
         future = self.ik_client.call_async(request)
         event = threading.Event()
         future.add_done_callback(lambda f: event.set())
-        event.wait()
+        if not event.wait(timeout=5.0) or future.result() is None:
+            self.get_logger().error('IK service timeout en call_ik')
+            return False, list(self.q0)
         return future.result().success, list(future.result().q)
 
     def call_fk(self, q):
@@ -79,18 +105,27 @@ class GenTrajNode(Node):
         future = self.fk_client.call_async(request)
         event = threading.Event()
         future.add_done_callback(lambda f: event.set())
-        event.wait()
+        if not event.wait(timeout=5.0) or future.result() is None:
+            self.get_logger().error('FK service timeout en call_fk')
+            return False, [0.0] * 6
         return future.result().success, list(future.result().pose)
     
     def gen_traj_callback(self, request, response):
+        debug = os.environ.get('DR_DEBUG') == '1'
+        G, RED, R = '\033[92m', '\033[91m', '\033[0m'
+        PREFIX = f'{G}--> [gen_traj_node]{R}'
+
         modo_str  = {0: 'Joint', 1: 'Linear'}.get(request.mode, str(request.mode))
         speed_str = {1: 'Lento', 2: 'Medio',  3: 'Rápido'}.get(request.speed_profile, str(request.speed_profile))
         pose_str  = [f'{v:.3f}' for v in request.pose]
         self.get_logger().info(f'GenTraj solicitado → modo: {modo_str}, speed: {speed_str}, pose: {pose_str}')
+        if debug:
+            print(f'{PREFIX} gen_traj solicitado: modo={modo_str} speed={speed_str} pose={pose_str}', file=sys.stderr)
 
         pose_obj = request.pose
         mode = request.mode
         speed = request.speed_profile
+        ctrl_freq = self.get_parameter('ctrl_freq').value
 
         [success, q_traj, points] = self.generator.generate(pose_obj, mode, speed, self.q0, self.c0)
 
@@ -102,18 +137,25 @@ class GenTrajNode(Node):
             self.get_logger().info(f'Trayectoria generada: {points} puntos.')
             self.q0 = list(q_traj[-6:])
             self.c0 = list(pose_obj)
+            if debug:
+                print(f'{PREFIX} → trayectoria generada: {points} puntos ({points / ctrl_freq:.2f}s)', file=sys.stderr)
         else:
             response.success = False
             response.q_traj = q_traj
             response.points = points
             response.message = "Interpolación fallida."
             self.get_logger().warn('GenTraj falló para la pose solicitada.')
+            if debug:
+                print(f'{RED}--> [gen_traj_node]{R} gen_traj falló: IK sin solución para pose={pose_str}', file=sys.stderr)
 
         return response
 
     def robot_state_callback(self, msg):
         self.q0 = list(msg.q)
         self.c0 = list(msg.pose)
+        if os.environ.get('DR_DEBUG_VERBOSE') == '1':
+            G, R = '\033[92m', '\033[0m'
+            print(f'{G}--> [gen_traj_node]{R} q0/c0 actualizados desde robot_state', file=sys.stderr)
 
 def main(args=None):
     rclpy.init(args=args)
