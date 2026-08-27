@@ -63,8 +63,8 @@ class InvKinematics:
         tool_xyz = params['T_tool_xyz']
         tool_rpy = params['T_tool_rpy']
 
-        self.T_base = transl(base_xyz[0], base_xyz[1], base_xyz[2]) @ trotx(base_rpy[0]) @ troty(base_rpy[1]) @ trotz(base_rpy[2])
-        self.T_tool = transl(tool_xyz[0], tool_xyz[1], tool_xyz[2]) @ trotx(tool_rpy[0]) @ troty(tool_rpy[1]) @ trotz(tool_rpy[2])
+        self.T_base = transl(base_xyz[0], base_xyz[1], base_xyz[2]) @ trotz(base_rpy[2]) @ troty(base_rpy[1]) @ trotz(base_rpy[2])
+        self.T_tool = transl(tool_xyz[0], tool_xyz[1], tool_xyz[2]) @ trotz(tool_rpy[2]) @ troty(tool_rpy[1]) @ trotz(tool_rpy[2])
 
     def solve_ik(self, x, y, z, roll, pitch, yaw, force, q0):
 

@@ -41,8 +41,8 @@ class ForwKinematics:
         self.tool_xyz = params['T_tool_xyz']
         self.tool_rpy = params['T_tool_rpy']
 
-        self.T_base = transl(self.base_xyz[0], self.base_xyz[1], self.base_xyz[2]) @ trotx(self.base_rpy[0]) @ troty(self.base_rpy[1]) @ trotz(self.base_rpy[2])
-        self.T_tool = transl(self.tool_xyz[0], self.tool_xyz[1], self.tool_xyz[2]) @ trotx(self.tool_rpy[0]) @ troty(self.tool_rpy[1]) @ trotz(self.tool_rpy[2])
+        self.T_base = transl(self.base_xyz[0], self.base_xyz[1], self.base_xyz[2]) @ trotz(self.base_rpy[2]) @ troty(self.base_rpy[1]) @ trotz(self.base_rpy[2])
+        self.T_tool = transl(self.tool_xyz[0], self.tool_xyz[1], self.tool_xyz[2]) @ trotz(self.tool_rpy[2]) @ troty(self.tool_rpy[1]) @ trotz(self.tool_rpy[2])
 
     def solve_fk(self, q1, q2, q3, q4, q5, q6):
 
