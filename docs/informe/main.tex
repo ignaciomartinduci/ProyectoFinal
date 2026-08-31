@@ -101,7 +101,7 @@
 \author{Ignacio Martín Duci \\ ignacio8martin@gmail.com \\ \\ Proyecto Final de Estudios (00441),\\ Facultad de Ingeniería, \\ Universidad Nacional de Cuyo, \\ \,\\Mendoza, Argentina \\ \\ Director: Ing. Eric Sánchez}
 
 % Fecha
-\date{Junio 2026}
+\date{Septiembre 2026}
 
 
 % Cuerpo del documento
@@ -370,7 +370,7 @@ Para obtener el modelo cinemático se aplica el algoritmo Denavit-Hartenberg est
     \item Enumerar los n+1 eslabones desde 0 hasta n, comenzando desde la base (eslabón fijo) y terminando en el efector final.
     \item Identificar los ejes de cada articulación. Si es rotacional, será el eje de giro; si es prismática, será el eje a lo largo del cual se produce el desplazamiento.
     \item Enumerar los ejes de 1 a n, comenzando desde el que une el eslabón base con el eslabón 1.
-    \item Para i de 0 a n-1, situar el eje $Z_1$ en el eje de la articulación i+1.
+    \item Para i de 0 a n-1, situar el eje $Z_i$ en el eje de la articulación i+1.
     \item El eje $Z_n$ se colocará en el extremo del último eslabón en la misma dirección que el eje $Z_{n-1}$.
     \item Situar el origen del sistema de la base $\{S_0\}$ en cualquier punto del eje $Z_0$.
     \item Para $i = 1$ a $n$, ubicar el sistema $\{S_i\}$ en la intersección entre el eje $Z_i$ y la recta perpendicular común a los ejes $Z_i$ y $Z_{i-1}$. En caso de que los ejes $Z_i$ y $Z_{i-1}$ se intersecten, el sistema $\{S_i\}$ se posiciona en dicho punto de intersección.
@@ -2168,7 +2168,7 @@ A continuación se detalla un ejemplo para cada salida.
 
 \end{lstlisting}
 
-El último ejemplo, correspondiente a una salida negativa, se produjo exigiendo un determinante de jacobiano excesivamente pequeño para que la verificación fallara intencionalmente. 
+El segundo bloque muestra la salida de una detención por configuración no singular. Aunque el valor del determinante ($7{,}897 \times 10^{-20}$) es cercano a cero en términos absolutos, este ejemplo se obtuvo reduciendo excesivamente el umbral de comparación a un valor extremadamente pequeño, lo que provocó que la configuración fuera clasificada como no singular y la ejecución se detuviera. En condiciones normales de operación, el umbral está calibrado para que configuraciones con determinantes de ese orden queden correctamente clasificadas como singulares y el ciclo continúe sin interrupciones.
  
 %====
 \subsection{Generación de trayectorias}
